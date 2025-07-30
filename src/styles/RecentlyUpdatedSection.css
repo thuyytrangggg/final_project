@@ -1,0 +1,278 @@
+.recently-updated-section {
+  margin-bottom: 50px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+.recent-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.recent-items {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.recent-items::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  height: 100px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  border-radius: 6px;
+}
+
+.recent-item:hover {
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.recent-item.loading {
+  cursor: default;
+}
+
+.recent-item.loading:hover {
+  transform: none;
+  background: none;
+}
+
+.recent-poster {
+  width: 60px;
+  height: 100px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.recent-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.recent-title {
+  font-size: 16px;
+  font-weight: 400;
+  color: white;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-subtitle {
+  font-size: 14px;
+  color: #ccc;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-time {
+  font-size: 14px;
+  color: #ccc;
+  margin: 0;
+}
+
+.nav-arrow {
+  background: #fff;
+  border: none;
+  color: black;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 15px;
+  flex-shrink: 0;
+}
+
+.nav-arrow:hover {
+  /* background: rgba(255, 255, 255, 0.2); */
+  transform: scale(1.1);
+}
+
+.nav-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-text {
+  height: 12px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.skeleton-title {
+  width: 80%;
+  height: 14px;
+}
+
+.skeleton-subtitle {
+  width: 60%;
+}
+
+.skeleton-time {
+  width: 40%;
+  height: 10px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Error States */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 40px;
+  color: #ccc;
+  text-align: center;
+}
+
+.error-message button {
+  background-color: #e50914;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.error-message button:hover {
+  background-color: #f40612;
+}
+
+@media (max-width: 768px) {
+  .recent-items {
+    gap: 15px;
+  }
+
+  .recent-item {
+    min-width: 180px;
+    gap: 10px;
+    padding: 6px;
+  }
+
+  .recent-poster {
+    width: 40px;
+    height: 55px;
+  }
+
+  .recent-title {
+    font-size: 13px;
+  }
+
+  .recent-subtitle {
+    font-size: 11px;
+  }
+
+  .recent-time {
+    font-size: 10px;
+  }
+
+  .nav-arrow {
+    width: 32px;
+    height: 32px;
+    margin-left: 10px;
+  }
+
+  .nav-arrow svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recent-items {
+    gap: 12px;
+  }
+
+  .recent-item {
+    min-width: 160px;
+    gap: 8px;
+    padding: 4px;
+  }
+
+  .recent-poster {
+    width: 35px;
+    height: 50px;
+  }
+
+  .recent-title {
+    font-size: 12px;
+  }
+
+  .recent-subtitle {
+    font-size: 10px;
+  }
+
+  .recent-time {
+    font-size: 9px;
+  }
+
+  .nav-arrow {
+    width: 30px;
+    height: 30px;
+    margin-left: 8px;
+  }
+
+  .nav-arrow svg {
+    width: 12px;
+    height: 12px;
+  }
+}

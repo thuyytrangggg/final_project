@@ -1,0 +1,523 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 40px;
+  background: transparent; /* Hoàn toàn trong suốt */
+  backdrop-filter: blur(0px); /* Không làm mờ nền */
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  height: 70px;
+  transition: all 0.3s ease;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex: 1;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  margin-right: 16px; /* Khoảng cách giữa logo và nav */
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ffc107, #ff9800); /* Màu vàng cam */
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.logo-text {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fefdfd;
+  margin: 0;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  font-family: "Anton", sans-serif;
+}
+
+/* Loại bỏ header-center */
+/* .header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+} */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Khoảng cách giữa các item bên phải */
+  flex: 1;
+  justify-content: flex-end; /* Đẩy các item sang phải */
+}
+
+.nav {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.7); /* Màu mờ hơn cho các nav link không active */
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 8px 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none; /* Đảm bảo không có border */
+  background: none; /* Đảm bảo không có nền */
+}
+
+.nav-link:hover {
+  color: #00d4ff;
+}
+
+.nav-link.active-nav-link {
+  color: #ffffff; /* Màu trắng cho nav link active */
+  font-weight: 700; /* Đậm hơn cho nav link active */
+}
+
+.nav-link.explore {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link.dropdown svg {
+  width: 12px;
+  height: 12px;
+}
+
+.nav-link[style*="position: relative"] {
+  position: relative !important;
+}
+
+.nav-link button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%; /* Cho phép search-container mở rộng */
+  max-width: 250px; /* Giới hạn chiều rộng của search bar */
+  margin-left: auto; /* Đẩy search bar sang phải, tách biệt với các nút khác */
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1); /* Màu xám nhạt và trong suốt hơn */
+  color: white; /* Chữ trắng */
+  padding: 12px 50px 12px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none; /* Bỏ border mặc định */
+}
+
+.search-input::placeholder {
+  color: #bbb; /* Placeholder màu xám nhạt */
+  font-size: 14px;
+}
+
+.search-input:focus {
+  background: rgba(40, 40, 40, 0.1); /* Đậm hơn khi focus */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  border: 1px solid #fff; /* Thêm border khi focus */
+}
+
+.search-btn {
+  position: absolute;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #bbb; /* Icon màu xám nhạt */
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-btn:hover {
+  color: white; /* Icon trắng khi hover */
+}
+
+.search-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Base style for all header buttons */
+.header-btn {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center content for icon-only buttons */
+  white-space: nowrap;
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: white;
+  padding: 0; /* Reset padding */
+}
+
+.header-btn:hover {
+  transform: none; /* Reset transform on hover */
+}
+
+.clock-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Hình tròn */
+  border: none;
+  color: white;
+  flex-shrink: 0;
+}
+
+.clock-btn:hover {
+  border-color: #00d4ff; /* Viền xanh khi hover */
+  color: #00d4ff;
+}
+
+.language-btn {
+  padding: 8px 12px; /* Padding để tạo hình chữ nhật bo góc */
+  border-radius: 6px; /* Bo góc nhẹ */
+  border: 1px solid rgba(255, 255, 255, 0.8); /* Viền trắng */
+  font-size: 14px; /* Kích thước font cho "EN" */
+  color: white;
+  flex-shrink: 0;
+}
+
+.language-btn:hover {
+  border-color: #00d4ff; /* Viền xanh khi hover */
+  color: #00d4ff;
+}
+
+.profile-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ffe0b2; /* Màu nền cam nhạt */
+  color: #ff6b35; /* Màu icon cam đậm */
+  flex-shrink: 0;
+}
+
+.profile-btn:hover {
+  background-color: #ffcc80; /* Màu nền đậm hơn khi hover */
+  color: #ff6b35; /* Giữ nguyên màu icon */
+}
+
+.download-app-btn {
+  background: rgba(30, 30, 30, 0.8); /* Nền tối, trong suốt */
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 8px;
+}
+
+.download-app-btn:hover {
+  background: rgba(40, 40, 40, 0.95); /* Đậm hơn khi hover */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.download-logo-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.download-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.download-label {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.download-app-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.vip-btn {
+  background: rgba(30, 30, 30, 0.8); /* Nền tối, trong suốt */
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 6px;
+}
+
+.vip-btn:hover {
+  background: rgba(40, 40, 40, 0.95); /* Đậm hơn khi hover */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.search-loading,
+.search-no-results {
+  padding: 20px;
+  text-align: center;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.search-items {
+  padding: 8px 0;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-item:last-child {
+  border-bottom: none;
+}
+
+.search-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.search-item-poster {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.search-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-item-info h4 {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-item-info p {
+  color: #ccc;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.media-type {
+  background-color: rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .header {
+    padding: 12px 30px;
+  }
+
+  .header-left {
+    gap: 30px;
+  }
+
+  .nav {
+    gap: 24px;
+  }
+
+  .header-right {
+    gap: 12px;
+  }
+
+  .search-container {
+    max-width: 200px; /* Điều chỉnh max-width cho search bar trên màn hình lớn */
+  }
+
+  .logo-text {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 20px;
+    flex-direction: column;
+    height: auto;
+    gap: 16px;
+  }
+
+  .header-left,
+  .header-right {
+    width: 100%;
+    flex: none;
+    justify-content: space-between; /* Căn chỉnh lại cho mobile */
+  }
+
+  .header-left {
+    order: -1; /* Đảm bảo logo và nav ở trên cùng */
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav {
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%; /* Đảm bảo nav chiếm toàn bộ chiều rộng */
+  }
+
+  .header-right {
+    justify-content: center; /* Căn giữa các nút bên phải */
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .search-container {
+    max-width: 100%; /* Cho phép search bar mở rộng trên mobile */
+    margin-left: 0; /* Bỏ margin-left auto trên mobile */
+    order: 1; /* Đặt search bar xuống dưới cùng trong header-right */
+  }
+
+  .search-input {
+    padding: 10px 45px 10px 16px;
+    font-size: 14px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-left {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .nav {
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-link {
+    font-size: 13px;
+  }
+
+  .header-right {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .header-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .search-input {
+    padding: 10px 40px 10px 14px;
+    font-size: 13px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+}
+
+.header.scrolled {
+  background: #000; /* Màu đen khi cuộn */
+  backdrop-filter: blur(0px); /* Đảm bảo không có blur khi màu đen */
+}
+
+.header.scrolled:hover {
+  background: #000; /* Giữ nguyên màu đen khi hover nếu đã cuộn */
+  backdrop-filter: blur(0px);
+}
