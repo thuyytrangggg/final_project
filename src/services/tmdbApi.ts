@@ -13,6 +13,12 @@ import type {
   ActorDetails,
 } from "../types/mediaTypes"
 
+interface Country {
+  iso_3166_1: string
+  english_name: string
+  native_name?: string
+}
+
 class TMDBApi {
   private async fetchFromTMDB<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     const url = new URL(`${API_CONFIG.BASE_URL}${endpoint}`)
@@ -136,6 +142,12 @@ class TMDBApi {
   async getTVGenres(): Promise<Genre[]> {
     const response = await this.fetchFromTMDB<{ genres: Genre[] }>("/genre/tv/list")
     return response.genres
+  }
+
+  // Get countries
+  async getCountries(): Promise<Country[]> {
+    const response = await this.fetchFromTMDB<Country[]>("/configuration/countries")
+    return response
   }
 
   // Search movies

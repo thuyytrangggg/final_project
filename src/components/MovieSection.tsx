@@ -14,9 +14,10 @@ interface MovieSectionProps {
   }[]
   showViewAll?: boolean
   rows?: number
+  onMovieClick?: (movieData: any) => void
 }
 
-const MovieSection: React.FC<MovieSectionProps> = ({ title, movies, showViewAll = true, rows = 1 }) => {
+const MovieSection: React.FC<MovieSectionProps> = ({ title, movies, showViewAll = true, rows = 1, onMovieClick }) => {
   return (
     <div className="movie-section">
       <div className="section-header">
@@ -26,7 +27,7 @@ const MovieSection: React.FC<MovieSectionProps> = ({ title, movies, showViewAll 
       <div className="movies-container" style={{ "--rows": rows } as React.CSSProperties}>
         <div className={`movies-grid ${rows > 1 ? "multi-row" : "single-row"}`}>
           {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
           ))}
         </div>
       </div>

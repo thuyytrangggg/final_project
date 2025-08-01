@@ -1,4 +1,3 @@
-// Sample data for Avatar movie
 export const avatarMovie = {
   id: 1,
   title: "Avatar: The Way of Water",
@@ -14,7 +13,7 @@ export const avatarMovie = {
     { id: 878, name: "Science Fiction" },
   ],
   media_type: "movie",
-  runtime: 192, // 3 hours 12 minutes
+  runtime: 192, 
 }
 
 export const movieGenres: { [key: number]: string } = {

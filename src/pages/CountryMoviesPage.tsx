@@ -16,9 +16,10 @@ interface Country {
 interface CountryMoviesPageProps {
   selectedCountry: Country
   onBack: () => void
+  onMovieClick?: (movieData: any) => void
 }
 
-const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, onBack }) => {
+const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, onBack, onMovieClick }) => {
   const [movies, setMovies] = useState<Movie[]>([])
   const [tvShows, setTvShows] = useState<TVShow[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +27,7 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -49,7 +51,6 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
           }
         }
 
-        // Estimate total pages
         setTotalPages(Math.min(20, Math.ceil(movieResults.length > 0 || tvResults.length > 0 ? 500 / 20 : 1)))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch content")
@@ -63,13 +64,39 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
   }, [selectedCountry.iso_3166_1, page])
 
   useEffect(() => {
-    // Reset page when switching tabs
     setPage(1)
   }, [activeTab])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const loadMore = () => {
     if (page < totalPages && !loading) {
       setPage((prev) => prev + 1)
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleContentClick = (item: Movie | TVShow) => {
+    if (onMovieClick) {
+      const mediaItem = {
+        ...item,
+        media_type: activeTab === "movies" ? ("movie" as const) : ("tv" as const),
+        title: activeTab === "movies" ? (item as Movie).title : undefined,
+        name: activeTab === "tv" ? (item as TVShow).name : undefined,
+        release_date: activeTab === "movies" ? (item as Movie).release_date : undefined,
+        first_air_date: activeTab === "tv" ? (item as TVShow).first_air_date : undefined,
+      }
+      onMovieClick(mediaItem)
     }
   }
 
@@ -99,19 +126,6 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
 
   return (
     <div className="country-movies-container">
-      <button className="back-button" onClick={onBack}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M19 12H5M12 19L5 12L12 5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        Back
-      </button>
-
       <div className="country-header">
         <h1 className="country-title">{selectedCountry.native_name} Content</h1>
         <p className="country-subtitle">Discover the best content from {selectedCountry.english_name}</p>
@@ -131,7 +145,7 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
 
       <div className="content-grid">
         {currentContent.map((item) => (
-          <div key={item.id} className="content-card">
+          <div key={item.id} className="content-card" onClick={() => handleContentClick(item)}>
             <div className="content-poster">
               <img
                 src={getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
@@ -163,6 +177,20 @@ const CountryMoviesPage: React.FC<CountryMoviesPageProps> = ({ selectedCountry, 
           </div>
         ))}
       </div>
+
+      {showScrollTop && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18 15L12 9L6 15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
 
       {currentContent.length > 0 && page < totalPages && (
         <div className="load-more-container">

@@ -14,6 +14,45 @@
   animation: slideDown 0.2s ease-out;
 }
 
+.country-loading,
+.country-error {
+  padding: 30px;
+  text-align: center;
+  color: white;
+}
+
+.country-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #00d4ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.country-error button {
+  background-color: #e50914;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.3s;
+}
+
+.country-error button:hover {
+  background-color: #f40612;
+}
+
 .country-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -89,6 +128,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 

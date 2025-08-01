@@ -12,26 +12,6 @@
   text-align: left;
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 20px;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(-2px);
-}
-
 .topics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -253,7 +233,40 @@
   background-color: #f40612;
 }
 
-/* Responsive Design */
+/* Scroll to Top Button Styles */
+.scroll-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #e50914, #ff6b35);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.6);
+}
+
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
+
 @media (min-width: 1400px) {
   .topics-grid {
     grid-template-columns: repeat(6, 1fr);

@@ -20,7 +20,7 @@ export function useSearch() {
       setLoading(true)
       setError(null)
       const searchResults = await tmdbApi.searchMulti(searchQuery)
-      setResults(searchResults.slice(0, 10)) // Limit to 10 results
+      setResults(searchResults.slice(0, 10))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed")
       console.error("Search error:", err)
@@ -32,7 +32,7 @@ export function useSearch() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       search(query)
-    }, 300) // Debounce search
+    }, 300)
 
     return () => clearTimeout(timeoutId)
   }, [query, search])

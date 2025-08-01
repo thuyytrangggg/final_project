@@ -5,26 +5,6 @@
   min-height: 100vh;
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 30px;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(-2px);
-}
-
 .country-header {
   margin-bottom: 30px;
 }
@@ -272,15 +252,6 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .error-state button {
   background-color: #e50914;
   color: white;
@@ -296,7 +267,31 @@
   background-color: #f40612;
 }
 
-/* Responsive Design */
+/* Scroll to Top Button */
+.scroll-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+}
+
 @media (max-width: 1200px) {
   .country-movies-container {
     padding: 90px 40px 50px 40px;
@@ -339,6 +334,13 @@
     padding: 10px 16px;
     font-size: 14px;
   }
+
+  .scroll-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -365,5 +367,14 @@
 
   .content-overview {
     font-size: 11px;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }

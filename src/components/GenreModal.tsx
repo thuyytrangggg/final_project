@@ -53,7 +53,7 @@ const GenreModal: React.FC<GenreModalProps> = ({ isOpen, onClose, onGenreSelect 
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element
-      if (!target.closest(".genre-dropdown") && !target.closest(".nav-link")) {
+      if (!target.closest(".genre-dropdown")) {
         onClose()
       }
     }

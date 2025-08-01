@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import "../styles/MovieCard.css"
 
@@ -10,11 +12,18 @@ interface MovieCardProps {
     rating: number
     genres: string[]
   }
+  onMovieClick?: (movieData: any) => void
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ movie, onMovieClick }) => {
+  const handleClick = () => {
+    if (onMovieClick) {
+      onMovieClick(movie)
+    }
+  }
+
   return (
-    <div className="movie-card">
+    <div className="movie-card" onClick={handleClick}>
       <div className="movie-poster">
         <img src={movie.poster || "/placeholder.svg?height=300&width=200"} alt={movie.title} />
         <div className="movie-overlay">

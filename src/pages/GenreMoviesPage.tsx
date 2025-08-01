@@ -10,14 +10,16 @@ import "./GenreMoviesPage.css"
 interface GenreMoviesPageProps {
   selectedGenre: Genre
   onBack: () => void
+  onMovieClick?: (movieData: any) => void
 }
 
-const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack }) => {
+const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack, onMovieClick }) => {
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -33,7 +35,6 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
           setMovies((prev) => [...prev, ...response])
         }
 
-        // Estimate total pages (TMDB API doesn't always return this info)
         setTotalPages(Math.min(20, Math.ceil(response.length > 0 ? 500 / 20 : 1)))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch movies")
@@ -46,10 +47,34 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
     fetchMovies()
   }, [selectedGenre.id, page])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   const loadMore = () => {
     if (page < totalPages && !loading) {
       setPage((prev) => prev + 1)
     }
+  }
+
+  const handleMovieClick = (movie: Movie) => {
+    if (onMovieClick) {
+      const mediaItem = {
+        ...movie,
+        media_type: "movie" as const,
+        name: movie.title,
+      }
+      onMovieClick(mediaItem)
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   if (loading && page === 1) {
@@ -76,19 +101,6 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
   return (
     <div className="genre-movies-container">
-      <button className="back-button" onClick={onBack}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M19 12H5M12 19L5 12L12 5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        Back
-      </button>
-
       <div className="genre-header">
         <h1 className="genre-title">{selectedGenre.name} Movies</h1>
         <p className="genre-subtitle">Discover the best {selectedGenre.name.toLowerCase()} movies</p>
@@ -96,7 +108,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
       <div className="movies-grid">
         {movies.map((movie) => (
-          <div key={movie.id} className="movie-card">
+          <div key={movie.id} className="movie-card" onClick={() => handleMovieClick(movie)}>
             <div className="movie-poster">
               <img
                 src={getImageUrl(movie.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
@@ -122,6 +134,20 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
           </div>
         ))}
       </div>
+
+      {showScrollTop && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18 15L12 9L6 15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
 
       {movies.length > 0 && page < totalPages && (
         <div className="load-more-container">

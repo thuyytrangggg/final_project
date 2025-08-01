@@ -9,9 +9,10 @@ import "./SeriesPage.css"
 
 interface SeriesPageProps {
   onBack: () => void
+  onMovieClick?: (movieData: any) => void
 }
 
-const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
+const SeriesPage: React.FC<SeriesPageProps> = ({ onBack, onMovieClick }) => {
   const [series, setSeries] = useState<TVShow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +21,7 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
   )
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   const categories = [
     { key: "popular", label: "Popular", description: "Most popular TV shows right now" },
@@ -75,10 +77,35 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
     setPage(1)
   }, [activeCategory])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   const loadMore = () => {
     if (page < totalPages && !loading) {
       setPage((prev) => prev + 1)
     }
+  }
+
+  const handleSeriesClick = (show: TVShow) => {
+    if (onMovieClick) {
+      const mediaItem = {
+        ...show,
+        media_type: "tv" as const,
+        title: show.name,
+        release_date: show.first_air_date,
+      }
+      onMovieClick(mediaItem)
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const currentCategory = categories.find((cat) => cat.key === activeCategory)
@@ -107,19 +134,6 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
 
   return (
     <div className="series-page-container">
-      <button className="back-button" onClick={onBack}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M19 12H5M12 19L5 12L12 5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        Back
-      </button>
-
       <div className="series-header">
         <h1 className="series-title">TV Series</h1>
         <p className="series-subtitle">Discover amazing TV shows and series from around the world</p>
@@ -146,7 +160,7 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
 
       <div className="series-grid">
         {series.map((show) => (
-          <div key={show.id} className="series-card">
+          <div key={show.id} className="series-card" onClick={() => handleSeriesClick(show)}>
             <div className="series-poster">
               <img
                 src={getImageUrl(show.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
@@ -192,6 +206,20 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack }) => {
         <div className="no-series">
           <p>No TV shows found in this category.</p>
         </div>
+      )}
+
+      {showScrollTop && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18 15L12 9L6 15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       )}
     </div>
   )

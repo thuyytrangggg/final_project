@@ -16,7 +16,11 @@ interface RecentItem {
   first_air_date?: string
 }
 
-const RecentlyUpdatedSection: React.FC = () => {
+interface RecentlyUpdatedSectionProps {
+  onItemClick?: (item: any) => void
+}
+
+const RecentlyUpdatedSection: React.FC<RecentlyUpdatedSectionProps> = ({ onItemClick }) => {
   const [recentItems, setRecentItems] = useState<RecentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,6 +68,37 @@ const RecentlyUpdatedSection: React.FC = () => {
     fetchRecentlyUpdated()
   }, [])
 
+  const handleItemClick = (item: RecentItem) => {
+    if (onItemClick) {
+      const mediaItem = {
+        id: item.id,
+        title: item.title,
+        name: item.title,
+        poster_path: item.poster?.includes("placeholder") ? null : extractPosterPath(item.poster),
+        backdrop_path: null,
+        vote_average: 7.5, 
+        release_date: item.first_air_date || "2023-01-01",
+        first_air_date: item.first_air_date || "2023-01-01",
+        overview: `${item.title} - ${item.subtitle}`,
+        genre_ids: [],
+        genres: [],
+        media_type: "tv" as const,
+        adult: false,
+        original_language: "en",
+        original_title: item.title,
+        popularity: 500,
+        vote_count: 1000,
+      }
+      onItemClick(mediaItem)
+    }
+  }
+
+  const extractPosterPath = (posterUrl: string): string | null => {
+    if (!posterUrl || posterUrl.includes("placeholder")) return null
+    const match = posterUrl.match(/\/w\d+(.+)$/)
+    return match ? match[1] : null
+  }
+
   if (loading) {
     return (
       <div className="recently-updated-section">
@@ -110,7 +145,7 @@ const RecentlyUpdatedSection: React.FC = () => {
       <div className="recent-container">
         <div className="recent-items">
           {recentItems.map((item) => (
-            <div key={item.id} className="recent-item">
+            <div key={item.id} className="recent-item" onClick={() => handleItemClick(item)}>
               <div className="recent-poster">
                 <img
                   src={item.poster || "/placeholder.svg?height=60&width=45"}

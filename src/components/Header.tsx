@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [activeNav, setActiveNav] = useState("home")
   const [showGenreModal, setShowGenreModal] = useState(false)
   const [showCountryModal, setShowCountryModal] = useState(false)
+  const [searchInput, setSearchInput] = useState("")
 
   const handleSearchFocus = () => {
     setShowResults(true)
@@ -40,7 +41,27 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     onNavigate("movie-details", { mediaItem: item })
     setShowResults(false)
     setQuery("")
+    setSearchInput("")
     setActiveNav("movie-details")
+  }
+
+  const handleSearchSubmit = () => {
+    if (searchInput.trim()) {
+      onNavigate("search-results", { searchQuery: searchInput.trim() })
+      setShowResults(false)
+      setActiveNav("search-results")
+    }
+  }
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit()
+    }
+  }
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value)
+    setQuery(value) // For dropdown results
   }
 
   useEffect(() => {
@@ -62,6 +83,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const handleLogoClick = () => {
     onNavigate("home")
     setActiveNav("home")
+    setSearchInput("")
+    setQuery("")
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -155,12 +178,13 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             type="text"
             placeholder="Tìm kiếm phim, diễn viên"
             className="search-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => handleSearchInputChange(e.target.value)}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
+            onKeyPress={handleSearchKeyPress}
           />
-          <button className="search-btn">
+          <button className="search-btn" onClick={handleSearchSubmit}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"

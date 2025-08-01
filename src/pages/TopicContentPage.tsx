@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { tmdbApi } from "../services/tmdbApi"
 import { getImageUrl } from "../config/api"
-import type { Movie, Genre } from "../types/mediaTypes"
+import type { Movie } from "../types/mediaTypes"
 import "./TopicContentPage.css"
 
 interface Topic {
@@ -16,16 +16,18 @@ interface Topic {
 
 interface TopicContentPageProps {
   selectedTopic?: Topic | null
-  selectedGenre?: Genre | null
   onBack?: () => void
+  onTopicSelect?: (topic: Topic) => void
+  onMovieClick?: (movieData: any) => void
 }
 
-const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, selectedGenre, onBack }) => {
+const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, onBack, onTopicSelect, onMovieClick }) => {
   const [topics, setTopics] = useState<Topic[]>([])
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showMovies, setShowMovies] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   // Static topics data with genre mappings
   const staticTopics: Topic[] = [
@@ -62,11 +64,6 @@ const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, sele
 
           setMovies(uniqueMovies)
           setShowMovies(true)
-        } else if (selectedGenre) {
-          // Fetch movies for selected genre
-          const genreMovies = await tmdbApi.discoverMoviesByGenre(selectedGenre.id, 1)
-          setMovies(genreMovies.slice(0, 20))
-          setShowMovies(true)
         } else {
           // Show topics grid
           setTopics(staticTopics)
@@ -81,11 +78,35 @@ const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, sele
     }
 
     fetchData()
-  }, [selectedTopic, selectedGenre])
+  }, [selectedTopic])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const handleTopicClick = (topic: Topic) => {
     console.log("Selected topic:", topic)
-    // This would be handled by parent component
+    onTopicSelect?.(topic)
+  }
+
+  const handleMovieClick = (movie: Movie) => {
+    if (onMovieClick) {
+      const mediaItem = {
+        ...movie,
+        media_type: "movie" as const,
+        name: movie.title,
+      }
+      onMovieClick(mediaItem)
+    }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   if (loading) {
@@ -110,29 +131,13 @@ const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, sele
     )
   }
 
-  if (showMovies) {
+  if (showMovies && selectedTopic) {
     return (
       <div className="topics-page-container">
-        {onBack && (
-          <button className="back-button" onClick={onBack}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M19 12H5M12 19L5 12L12 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Back
-          </button>
-        )}
-        <h1 className="topics-page-title">
-          {selectedTopic ? `${selectedTopic.name} Movies` : selectedGenre ? `${selectedGenre.name} Movies` : "Movies"}
-        </h1>
+        <h1 className="topics-page-title">{selectedTopic.name} Movies</h1>
         <div className="movies-grid">
           {movies.map((movie) => (
-            <div key={movie.id} className="movie-card">
+            <div key={movie.id} className="movie-card" onClick={() => handleMovieClick(movie)}>
               <div className="movie-poster">
                 <img
                   src={getImageUrl(movie.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
@@ -155,6 +160,19 @@ const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, sele
             </div>
           ))}
         </div>
+        {showScrollTop && (
+          <button className="scroll-to-top" onClick={scrollToTop}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M18 15L12 9L6 15"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
       </div>
     )
   }
@@ -188,6 +206,19 @@ const TopicContentPage: React.FC<TopicContentPageProps> = ({ selectedTopic, sele
           </div>
         ))}
       </div>
+      {showScrollTop && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18 15L12 9L6 15"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

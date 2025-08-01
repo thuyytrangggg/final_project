@@ -5,12 +5,70 @@
 }
 
 .content {
-  padding: 60px 100px;
+  padding: 70px 60px 60px 60px;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #000;
+  color: white;
+  text-align: center;
+  gap: 20px;
+}
+
+.error-container button {
+  background-color: #e50914;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.error-container button:hover {
+  background-color: #f40612;
+}
+
+/* Scroll to Top Button Styles */
+.scroll-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #e50914, #ff6b35);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.6);
 }
 
 @media (max-width: 768px) {
   .content {
-    padding: 0 20px;
-    padding-bottom: 40px;
+    padding: 70px 20px 40px 20px;
+  }
+
+  .scroll-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
   }
 }

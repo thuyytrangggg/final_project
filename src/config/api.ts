@@ -19,21 +19,11 @@ export const formatDate = (dateString: string): string => {
   return date.getFullYear().toString()
 }
 
-// export const formatRuntimeFromSeconds = (secondsTotal: number): string => {
-//   const hours = Math.floor(secondsTotal / 3600)
-//   const mins = Math.floor((secondsTotal % 3600) / 60)
-//   const secs = secondsTotal % 60
-
-//   const pad = (num: number) => String(num).padStart(2, '0')
-
-//   return `${hours}:${pad(mins)}:${pad(secs)}`
-// }
-
 
 export const formatRuntime = (minutes: number): string => {
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  const seconds = 0 // nếu không có giây
+  const seconds = 0 
 
   const pad = (num: number) => String(num).padStart(2, '0')
 
