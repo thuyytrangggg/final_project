@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useSearch } from "../hooks/useSearch"
@@ -61,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value)
-    setQuery(value) // For dropdown results
+    setQuery(value) 
   }
 
   useEffect(() => {
@@ -105,6 +103,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     onNavigate("country-movies", { selectedCountry: country })
   }
 
+  const handleProfileClick = () => {
+    onNavigate("account")
+    setActiveNav("account")
+  }
+
   return (
     <header className={`header ${scrolled ? "scrolled" : ""}`}>
       <div className="header-left">
@@ -112,21 +115,28 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           <h1 className="logo-text">MOVIE</h1>
         </div>
         <nav className="nav">
-          <a
+          <button
             onClick={() => handleNavLinkClick("topics")}
             className={`nav-link ${activeNav === "topics" ? "active-nav-link" : ""}`}
+            type="button"
           >
             Topic
-          </a>
-          <button
-            onClick={() => setShowGenreModal(!showGenreModal)}
-            className={`nav-link ${activeNav === "genre" ? "active-nav-link" : ""}`}
-            style={{ position: "relative" }}
-          >
-            Genre
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7 10L12 15L17 10H7Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          </button>
+
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => {
+                setShowGenreModal(!showGenreModal)
+                setShowCountryModal(false)
+                setActiveNav("genre")
+              }}
+              className={`nav-link ${activeNav === "genre" ? "active-nav-link" : ""}`}
+            >
+              Genre
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 10L12 15L17 10H7Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
             {showGenreModal && (
               <GenreModal
                 isOpen={showGenreModal}
@@ -134,16 +144,33 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 onGenreSelect={handleGenreSelect}
               />
             )}
-          </button>
-          <button
-            onClick={() => setShowCountryModal(!showCountryModal)}
-            className={`nav-link ${activeNav === "country" ? "active-nav-link" : ""}`}
-            style={{ position: "relative" }}
-          >
-            Country
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7 10L12 15L17 10H7Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          </div>
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => {
+                setShowCountryModal(!showCountryModal);
+                setShowGenreModal(false);
+                setActiveNav("country");
+              }}
+              className={`nav-link ${activeNav === "country" ? "active-nav-link" : ""}`}
+            >
+              Country
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7 10L12 15L17 10H7Z"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
             {showCountryModal && (
               <CountryModal
                 isOpen={showCountryModal}
@@ -151,32 +178,33 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                 onCountrySelect={handleCountrySelect}
               />
             )}
-          </button>
-          <a
+          </div>
+
+          <button
             onClick={() => handleNavLinkClick("movies")}
             className={`nav-link ${activeNav === "movies" ? "active-nav-link" : ""}`}
           >
             Movies
-          </a>
-          <a
+          </button>
+          <button
             onClick={() => handleNavLinkClick("series")}
             className={`nav-link ${activeNav === "series" ? "active-nav-link" : ""}`}
           >
             Series
-          </a>
-          <a
+          </button>
+          <button
             onClick={() => handleNavLinkClick("actor")}
             className={`nav-link ${activeNav === "actor" ? "active-nav-link" : ""}`}
           >
             Actor
-          </a>
+          </button>
         </nav>
       </div>
       <div className="header-right">
         <div className="search-container">
           <input
             type="text"
-            placeholder="Tìm kiếm phim, diễn viên"
+            placeholder="Search"
             className="search-input"
             value={searchInput}
             onChange={(e) => handleSearchInputChange(e.target.value)}
@@ -238,7 +266,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           </svg>
         </button>
         <button className="header-btn language-btn">EN</button>
-        <button className="header-btn profile-btn">
+        <button className="header-btn profile-btn" onClick={handleProfileClick}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>

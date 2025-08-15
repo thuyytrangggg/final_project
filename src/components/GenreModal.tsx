@@ -25,11 +25,15 @@ const GenreModal: React.FC<GenreModalProps> = ({ isOpen, onClose, onGenreSelect 
         setLoading(true)
         setError(null)
 
-        const [movieGenres, tvGenres] = await Promise.all([tmdbApi.getMovieGenres(), tmdbApi.getTVGenres()])
+        const [movieGenres, tvGenres] = await Promise.all([
+          tmdbApi.getMovieGenres(),
+          tmdbApi.getTVGenres()
+        ])
 
         const allGenres = [...movieGenres, ...tvGenres]
         const uniqueGenres = allGenres.filter(
-          (genre, index, self) => index === self.findIndex((g) => g.id === genre.id),
+          (genre, index, self) =>
+            index === self.findIndex((g) => g.id === genre.id)
         )
 
         setGenres(uniqueGenres)
@@ -46,14 +50,13 @@ const GenreModal: React.FC<GenreModalProps> = ({ isOpen, onClose, onGenreSelect 
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose()
-      }
+      if (e.key === "Escape") onClose()
     }
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element
-      if (!target.closest(".genre-dropdown")) {
+      const dropdown = document.querySelector(".genre-dropdown")
+      if (dropdown && !dropdown.contains(target)) {
         onClose()
       }
     }
@@ -69,57 +72,37 @@ const GenreModal: React.FC<GenreModalProps> = ({ isOpen, onClose, onGenreSelect 
     }
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
-
   const handleGenreClick = (genre: Genre) => {
-    console.log("Selected genre:", genre)
     onGenreSelect?.(genre)
     onClose()
   }
 
-  const getGenreColumns = () => {
-    const itemsPerColumn = Math.ceil(genres.length / 4)
-    const columns: Genre[][] = [[], [], [], []]
-
-    genres.forEach((genre, index) => {
-      const columnIndex = Math.floor(index / itemsPerColumn)
-      if (columnIndex < 4) {
-        columns[columnIndex].push(genre)
-      }
-    })
-
-    return columns
-  }
+  if (!isOpen) return null
 
   return (
     <div className="genre-dropdown">
       {loading && (
         <div className="genre-loading">
-          <div className="loading-spinner"></div>
+          <div className="loading-spinner" />
           <p>Loading genres...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="genre-error">
-          <p>Error loading genres</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
         </div>
       )}
 
       {!loading && !error && genres.length > 0 && (
         <div className="genre-grid">
-          {getGenreColumns().map((column, columnIndex) => (
-            <div key={columnIndex} className="genre-column">
-              {column.map((genre) => (
-                <button key={genre.id} className="genre-item" onClick={() => handleGenreClick(genre)}>
-                  {genre.name}
-                </button>
-              ))}
-            </div>
+          {genres.map((genre) => (
+            <button
+              key={genre.id}
+              className="genre-item"
+              onClick={() => handleGenreClick(genre)}
+            >
+              {genre.name}
+            </button>
           ))}
         </div>
       )}
+
+      {error && <p className="genre-error">{error}</p>}
     </div>
   )
 }

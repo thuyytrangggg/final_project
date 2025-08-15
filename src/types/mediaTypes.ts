@@ -17,6 +17,7 @@ export interface Movie {
   original_title: string
   popularity: number
   vote_count: number
+  character?: string 
 }
 
 export interface Genre {
@@ -79,6 +80,7 @@ export interface SpokenLanguage {
 
 export interface MovieCardProps {
   movie: Movie
+  onMovieClick: (movieData: any) => void 
 }
 
 export interface MovieGridProps {
@@ -86,7 +88,6 @@ export interface MovieGridProps {
   movies: Movie[]
 }
 
-// TV Show interfaces
 export interface TVShow {
   id: number
   name: string
@@ -106,6 +107,7 @@ export interface TVShow {
   original_name: string
   popularity: number
   vote_count: number
+  character?: string 
 }
 
 export interface Creator {
@@ -114,16 +116,16 @@ export interface Creator {
   profile_path?: string
 }
 
-// Combined type for movies and TV shows
 export interface MediaItem extends Omit<Movie, "title" | "release_date"> {
   title?: string
   name?: string
   release_date?: string
   first_air_date?: string
   media_type?: "movie" | "tv"
+  original_name?: string     
+
 }
 
-// Actor/Person interfaces
 export interface Actor {
   id: number
   name: string
@@ -143,4 +145,32 @@ export interface ActorDetails extends Actor {
   homepage?: string
   imdb_id?: string
   also_known_as: string[]
+  movie_credits?: {
+    cast: Movie[]
+    crew: any[]
+  }
+  tv_credits?: {
+    cast: TVShow[]
+    crew: any[]
+  }
+  images?: {
+    profiles: any[]
+  }
+}
+
+export interface FilterOptions {
+  countries: string[]
+  contentTypes: ("movie" | "tv")[]
+  ageRatings: string[] 
+  genres: number[]
+  versions: string[]
+  productionYears: number[]
+  sortBy: string
+  queryYear: string 
+}
+
+export interface Country {
+  iso_3166_1: string
+  english_name: string
+  native_name?: string
 }

@@ -1,181 +1,244 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import type { Movie, TVShow, MediaItem } from "../types/mediaTypes"
 import { tmdbApi } from "../services/tmdbApi"
 import { getImageUrl } from "../config/api"
-import type { TVShow } from "../types/mediaTypes"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import "../styles/RecentlyUpdatedSection.css"
 
-interface RecentItem {
-  id: number
-  title: string
-  subtitle: string
-  poster: string
-  time: string
-  first_air_date?: string
-}
-
 interface RecentlyUpdatedSectionProps {
-  onItemClick?: (item: any) => void
+  onItemClick: (item: MediaItem) => void
 }
 
 const RecentlyUpdatedSection: React.FC<RecentlyUpdatedSectionProps> = ({ onItemClick }) => {
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([])
+  const [recentlyUpdated, setRecentlyUpdated] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const mapToMediaItem = (item: Movie | TVShow): MediaItem => {
+    const isMovie = "release_date" in item
+
+    return {
+      id: item.id,
+      title: isMovie ? (item.original_title ?? item.title ?? "") : (item.original_name ?? item.name ?? ""),
+      name: !isMovie ? (item.name ?? "") : "",
+      poster_path: item.poster_path ?? undefined,
+      backdrop_path: item.backdrop_path ?? undefined,
+      vote_average: item.vote_average ?? 0,
+      release_date: isMovie ? (item.release_date ?? "") : "",
+      first_air_date: !isMovie ? (item.first_air_date ?? "") : "",
+      overview: item.overview ?? "",
+      genre_ids: item.genre_ids ?? [],
+      genres: item.genres ?? [],
+      media_type: isMovie ? "movie" : "tv",
+      adult: item.adult ?? false,
+      original_language: item.original_language ?? "",
+      original_title: isMovie ? (item.original_title ?? "") : "",
+      original_name: !isMovie ? (item.original_name ?? "") : "",
+      popularity: item.popularity ?? 0,
+      vote_count: item.vote_count ?? 0,
+    }
+  }
+
+  const fetchRecentlyUpdated = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const [movies, tvShows] = await Promise.all([tmdbApi.getMoviesNowPlaying(), tmdbApi.getTVOnTheAir()])
+
+      const combined = [...movies, ...tvShows].map(mapToMediaItem).sort((a, b) => {
+        const dateA = new Date(a.release_date || a.first_air_date || "1970-01-01").getTime()
+        const dateB = new Date(b.release_date || b.first_air_date || "1970-01-01").getTime()
+        return dateB - dateA
+      })
+
+      setRecentlyUpdated(combined.slice(0, 15))
+    } catch (err) {
+      console.error("Error:", err)
+      setError("Error fetching recently updated.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = scrollContainerRef.current.clientWidth
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      })
+
+      setTimeout(() => {
+        checkScrollability()
+      }, 600)
+    }
+  }
+
+  const getBadgeText = () => "New"
+
+  const getEpisodeInfo = (item: MediaItem) => {
+    if (item.media_type === "tv") {
+      return "Tập mới"
+    }
+    return null
+  }
+
+  const checkScrollability = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
+
+      setCanScrollLeft(scrollLeft > 5)
+
+      const maxScrollLeft = scrollWidth - clientWidth
+      setCanScrollRight(scrollLeft < maxScrollLeft - 5)
+    }
+  }
 
   useEffect(() => {
-    const fetchRecentlyUpdated = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const tvShows = await tmdbApi.getPopularTVShows(1)
-
-        const transformedItems: RecentItem[] = tvShows.slice(0, 6).map((show: TVShow, index) => {
-          const seasonNum = Math.floor(Math.random() * 5) + 1
-          const episodeNum = Math.floor(Math.random() * 12) + 1
-
-          const daysAgo = Math.floor(Math.random() * 30) + 1
-          const date = new Date()
-          date.setDate(date.getDate() - daysAgo)
-          const formattedDate = date.toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "2-digit",
-          })
-
-          return {
-            id: show.id,
-            title: show.name || "Unknown Title",
-            subtitle: `Season ${seasonNum}, Ep ${episodeNum}`,
-            poster: getImageUrl(show.poster_path, "w185"),
-            time: formattedDate,
-            first_air_date: show.first_air_date,
-          }
-        })
-
-        setRecentItems(transformedItems)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data")
-        console.error("Error fetching recently updated:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchRecentlyUpdated()
   }, [])
 
-  const handleItemClick = (item: RecentItem) => {
-    if (onItemClick) {
-      const mediaItem = {
-        id: item.id,
-        title: item.title,
-        name: item.title,
-        poster_path: item.poster?.includes("placeholder") ? null : extractPosterPath(item.poster),
-        backdrop_path: null,
-        vote_average: 7.5, 
-        release_date: item.first_air_date || "2023-01-01",
-        first_air_date: item.first_air_date || "2023-01-01",
-        overview: `${item.title} - ${item.subtitle}`,
-        genre_ids: [],
-        genres: [],
-        media_type: "tv" as const,
-        adult: false,
-        original_language: "en",
-        original_title: item.title,
-        popularity: 500,
-        vote_count: 1000,
-      }
-      onItemClick(mediaItem)
-    }
-  }
+  useEffect(() => {
+    checkScrollability()
+  }, [recentlyUpdated])
 
-  const extractPosterPath = (posterUrl: string): string | null => {
-    if (!posterUrl || posterUrl.includes("placeholder")) return null
-    const match = posterUrl.match(/\/w\d+(.+)$/)
-    return match ? match[1] : null
-  }
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", checkScrollability)
+      window.addEventListener("resize", checkScrollability)
+
+      return () => {
+        scrollContainer.removeEventListener("scroll", checkScrollability)
+        window.removeEventListener("resize", checkScrollability)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (scrollContainer) {
+      let scrollTimeout: NodeJS.Timeout
+
+      const handleScroll = () => {
+        // Clear previous timeout
+        clearTimeout(scrollTimeout)
+
+        // Set a new timeout to check scrollability after scrolling stops
+        scrollTimeout = setTimeout(() => {
+          checkScrollability()
+        }, 150) // Reduced timeout for better responsiveness
+      }
+
+      // Listen to scroll events (works better with touchpad)
+      scrollContainer.addEventListener("scroll", handleScroll)
+
+      // Also listen to scrollend for browsers that support it
+      scrollContainer.addEventListener("scrollend", checkScrollability)
+
+      return () => {
+        clearTimeout(scrollTimeout)
+        scrollContainer.removeEventListener("scroll", handleScroll)
+        scrollContainer.removeEventListener("scrollend", checkScrollability)
+      }
+    }
+  }, [])
 
   if (loading) {
     return (
-      <div className="recently-updated-section">
-        <div className="section-header">
-          <h2 className="section-title">Recently Updated</h2>
+      <section className="recently-updated-section">
+        <h2 className="section-title">Recently Updated</h2>
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading...</p>
         </div>
-        <div className="recent-container">
-          <div className="recent-items">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="recent-item loading">
-                <div className="recent-poster skeleton"></div>
-                <div className="recent-info">
-                  <div className="skeleton-text skeleton-title"></div>
-                  <div className="skeleton-text skeleton-subtitle"></div>
-                  <div className="skeleton-text skeleton-time"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      </section>
     )
   }
 
   if (error) {
     return (
-      <div className="recently-updated-section">
-        <div className="section-header">
-          <h2 className="section-title">Recently Updated</h2>
+      <section className="recently-updated-section">
+        <h2 className="section-title">Recently Updated</h2>
+        <div className="error-state">
+          <p>Error: {error}</p>
+          <button onClick={() => window.location.reload()}>Try again</button>
         </div>
-        <div className="error-message">
-          <p>Failed to load recently updated content</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      </div>
+      </section>
     )
   }
 
+  if (recentlyUpdated.length === 0) {
+    return null
+  }
+
   return (
-    <div className="recently-updated-section">
-      <div className="section-header">
-        <h2 className="section-title">Recently Updated</h2>
-      </div>
+    <section className="recently-updated-section">
+      <h2 className="section-title">Recently Updated</h2>
       <div className="recent-container">
-        <div className="recent-items">
-          {recentItems.map((item) => (
-            <div key={item.id} className="recent-item" onClick={() => handleItemClick(item)}>
-              <div className="recent-poster">
-                <img
-                  src={item.poster || "/placeholder.svg?height=60&width=45"}
-                  alt={item.title}
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg?height=60&width=45"
-                  }}
-                />
+        {canScrollLeft && (
+          <button className="nav-arrow left-arrow" onClick={() => scroll("left")}>
+            <ChevronLeft strokeWidth={3} />
+          </button>
+        )}
+        <div className="recent-items" ref={scrollContainerRef}>
+          {recentlyUpdated.map((item) => {
+            const badgeText = getBadgeText()
+            const episodeInfo = getEpisodeInfo(item)
+            return (
+              <div key={item.id} className="recent-item" onClick={() => onItemClick(item)}>
+                <div className="recent-poster">
+                  <img
+                    src={getImageUrl(item.poster_path, "w300") || "/placeholder.svg"}
+                    alt={item.title}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg?height=300&width=200"
+                    }}
+                  />
+                  {badgeText && <span className="badge">{badgeText}</span>}
+
+                  {/* Thêm rating vào góc dưới bên trái */}
+                  <div className="rating-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                        fill="#FFC107"
+                        stroke="#FFC107"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                    <span className="rating-value">{item.vote_average ? item.vote_average.toFixed(1) : "8.0"}</span>
+                  </div>
+
+                  {/* <div className="recent-overlay">
+                    {episodeInfo && (
+                      <div className="episode-info">
+                        <Volume2 size={16} />
+                        <span>Thuyết Minh</span>
+                        <span className="episode-text">{episodeInfo}</span>
+                      </div>
+                    )}
+                  </div> */}
+                </div>
+                <p className="recent-title-below">{item.title}</p>
               </div>
-              <div className="recent-info">
-                <h3 className="recent-title">{item.title}</h3>
-                <p className="recent-subtitle">{item.subtitle}</p>
-                <p className="recent-time">{item.time}</p>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
-        <button className="nav-arrow">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M9 18L15 12L9 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        {canScrollRight && (
+          <button className="nav-arrow right-arrow" onClick={() => scroll("right")}>
+            <ChevronRight strokeWidth={3} />
+          </button>
+        )}
       </div>
-    </div>
+    </section>
   )
 }
 

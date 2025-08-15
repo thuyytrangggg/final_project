@@ -1,8 +1,24 @@
-.movie-card {
-  flex: 0 0 200px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+.movie-card-wrapper {
   position: relative;
+  display: flex;
+  /* Cho phép modal thoát khỏi container */
+  overflow: visible;
+}
+
+.movie-card {
+  position: relative;
+  flex: 0 0 196.5px;
+  height: 320px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #e0e0e0;
+  background-color: transparent;
+  transition: transform 0.3s ease;
 }
 
 .movie-card:hover {
@@ -11,13 +27,11 @@
 }
 
 .movie-poster {
+  width: 100%;
+  height: 100%;
   position: relative;
-  width: 200px;
-  height: 280px;
-  border-radius: 6px;
+  background-color: #333;
   overflow: hidden;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .movie-poster img {
@@ -26,101 +40,207 @@
   object-fit: cover;
 }
 
-.movie-overlay {
+.movie-poster::after {
+  content: "";
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
+  height: 30%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
+  pointer-events: none;
+  z-index: 2;
 }
 
-.movie-card:hover .movie-overlay {
-  opacity: 1;
-}
-
-.play-btn {
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.play-btn:hover {
-  background: white;
-  transform: scale(1.1);
-}
-
-.movie-info {
-  padding: 0 2px;
-}
-
-.movie-title {
-  font-size: 14px;
-  font-weight: 600;
+.movie-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  background-color: #09ae1c;
+  font-weight: bold;
   color: white;
-  margin-bottom: 6px;
+  z-index: 3;
+}
+
+.movie-rating-badge {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffc107;
+  z-index: 3;
+}
+
+.movie-rating-badge svg {
+  color: #ffc107;
+}
+
+.movie-rating-value {
+  background: #ffc107;
+  background-clip: text;
+  color: #ffc107;
+}
+
+.movie-title-below {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.903);
+  margin: 10px 0 0;
+  padding: 0 0 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
 }
 
-.movie-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+.movie-hover-modal-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 500px;
+  /* Transform để modal căn giữa và lớn hơn, đồng thời thoát khỏi container */
+  transform: translate(-50%, -50%) scale(1.3);
+  z-index: 99;
+  pointer-events: auto;
+  /* Đảm bảo modal không bị clip */
+  overflow: visible;
 }
 
-.movie-year {
-  font-size: 12px;
-  color: #46d369;
-  font-weight: 500;
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .movie-card {
+    flex: 0 0 180px;
+    height: 270px;
+  }
+
+  .movie-hover-modal-container {
+    width: 350px;
+    height: 450px;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+
+  .movie-rating-badge {
+    padding: 3px 6px;
+    font-size: 11px;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .movie-rating-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .movie-rating-value {
+    font-size: 10px;
+  }
 }
 
-.movie-rating {
-  font-size: 12px;
-  color: #ffd700;
-  font-weight: 500;
-}
+@media (max-width: 992px) {
+  .movie-card {
+    flex: 0 0 160px;
+    height: 240px;
+  }
 
-.movie-genres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
+  .movie-hover-modal-container {
+    width: 320px;
+    height: 400px;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
 
-.genre-tag {
-  background-color: #e50914;
-  color: white;
-  font-size: 10px;
-  font-weight: 500;
-  padding: 3px 6px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  .movie-title-below {
+    font-size: 0.9em;
+  }
+
+  .movie-rating-badge {
+    padding: 3px 6px;
+    font-size: 11px;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .movie-rating-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .movie-rating-value {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 768px) {
   .movie-card {
-    flex: 0 0 150px;
+    flex: 0 0 140px;
+    height: 210px;
   }
 
-  .movie-poster {
-    width: 150px;
-    height: 210px;
+  .movie-hover-modal-container {
+    width: 280px;
+    height: 350px;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  .movie-badge {
+    padding: 3px 6px;
+    font-size: 0.7em;
+  }
+
+  .movie-rating-badge {
+    padding: 2px 5px;
+    font-size: 10px;
+    bottom: 6px;
+    left: 6px;
+    border-radius: 8px;
+  }
+
+  .movie-rating-badge svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .movie-rating-value {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 576px) {
+  .movie-card {
+    flex: 0 0 120px;
+    height: 180px;
+  }
+
+  .movie-hover-modal-container {
+    display: none;
+  }
+
+  .movie-title-below {
+    font-size: 0.85em;
+  }
+
+  .movie-rating-badge {
+    padding: 2px 4px;
+    font-size: 9px;
+    bottom: 5px;
+    left: 5px;
+  }
+
+  .movie-rating-badge svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .movie-rating-value {
+    font-size: 8px;
   }
 }

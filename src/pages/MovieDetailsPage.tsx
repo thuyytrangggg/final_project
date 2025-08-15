@@ -10,9 +10,10 @@ import "./MovieDetailsPage.css"
 interface MovieDetailsPageProps {
   mediaItem: MediaItem
   onBack: () => void
+  onActorClick?: (actorId: number) => void
 }
 
-const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }) => {
+const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, onActorClick }) => {
   const [details, setDetails] = useState<MovieDetails | TVShow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,13 +25,25 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
         setLoading(true)
         setError(null)
 
+        console.log("MovieDetailsPage received mediaItem:", mediaItem)
+        console.log("mediaItem.media_type:", mediaItem.media_type)
+
         let response
         if (mediaItem.media_type === "movie") {
           response = await tmdbApi.getMovieDetails(mediaItem.id)
-        } else {
+        } else if (mediaItem.media_type === "tv") {
           response = await tmdbApi.getTVShowDetails(mediaItem.id)
+        } else {
+          console.warn("mediaItem.media_type is undefined or invalid. Attempting to guess type based on ID.")
+          try {
+            response = await tmdbApi.getMovieDetails(mediaItem.id)
+          } catch (movieError) {
+            console.log("Movie fetch failed, trying TV show:", movieError)
+            response = await tmdbApi.getTVShowDetails(mediaItem.id)
+          }
         }
 
+        console.log("Fetched details from API:", response)
         setDetails(response)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch details")
@@ -41,14 +54,20 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
     }
 
     fetchDetails()
-  }, [mediaItem])
+  }, [mediaItem]) 
+
+  const handleActorClick = (actor: Cast) => {
+    if (onActorClick) {
+      onActorClick(actor.id)
+    }
+  }
 
   if (loading) {
     return (
       <div className="movie-details-container">
         <div className="loading-state">
           <div className="loading-spinner"></div>
-          <p>Loading movie details...</p>
+          <p>Loading details...</p>
         </div>
       </div>
     )
@@ -65,17 +84,29 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
     )
   }
 
-  const isMovie = mediaItem.media_type === "movie"
-  const title = isMovie ? (mediaItem as any).title : (mediaItem as any).name
-  const releaseDate = isMovie ? (mediaItem as any).release_date : (mediaItem as any).first_air_date
-  const backdropUrl = getImageUrl(mediaItem.backdrop_path, "w1280")
-  const posterUrl = getImageUrl(mediaItem.poster_path, "w500")
+  const isMovie = details ? "title" in details : mediaItem.media_type === "movie"
+  const title = isMovie
+    ? (details as MovieDetails)?.title || mediaItem.title
+    : (details as TVShow)?.name || mediaItem.name
+  const releaseDate = isMovie
+    ? (details as MovieDetails)?.release_date || mediaItem.release_date
+    : (details as TVShow)?.first_air_date || mediaItem.first_air_date
+
+  const backdropUrl =
+    details?.backdrop_path || mediaItem.backdrop_path
+      ? getImageUrl(details?.backdrop_path || mediaItem.backdrop_path, "w1280")
+      : "/placeholder.svg?height=500&width=1200"
+
+  const posterUrl =
+    details?.poster_path || mediaItem.poster_path
+      ? getImageUrl(details?.poster_path || mediaItem.poster_path, "w500")
+      : "/placeholder.svg?height=600&width=400"
 
   const renderOverview = () => (
     <div className="overview-content">
       <div className="movie-poster-section">
         <img
-          src={posterUrl || "/placeholder.svg?height=600&width=400"}
+          src={posterUrl || "/placeholder.svg"}
           alt={title}
           className="movie-poster-large"
           onError={(e) => {
@@ -105,11 +136,13 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
           </div>
           <div className="metadata-row">
             <span className="metadata-label">Rating:</span>
-            <span className="metadata-value">⭐ {mediaItem.vote_average?.toFixed(1) || "N/A"}</span>
+            <span className="metadata-value">
+              ⭐ {(details?.vote_average || mediaItem.vote_average)?.toFixed(1) || "N/A"}
+            </span>
           </div>
           <div className="metadata-row">
             <span className="metadata-label">Popularity:</span>
-            <span className="metadata-value">{mediaItem.popularity?.toFixed(0) || "N/A"}</span>
+            <span className="metadata-value">{(details?.popularity || mediaItem.popularity)?.toFixed(0) || "N/A"}</span>
           </div>
           {details && "runtime" in details && details.runtime && (
             <div className="metadata-row">
@@ -117,11 +150,20 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
               <span className="metadata-value">{formatRuntime(details.runtime)}</span>
             </div>
           )}
-          {details && "genres" in details && details.genres && (
+          {details &&
+            "episode_run_time" in details &&
+            details.episode_run_time &&
+            details.episode_run_time.length > 0 && (
+              <div className="metadata-row">
+                <span className="metadata-label">Episode Runtime:</span>
+                <span className="metadata-value">{formatRuntime(details.episode_run_time[0])}</span>
+              </div>
+            )}
+          {(details?.genres || mediaItem.genres) && (
             <div className="metadata-row">
               <span className="metadata-label">Genres:</span>
               <div className="genres-list">
-                {details.genres.map((genre) => (
+                {(details?.genres || mediaItem.genres)?.map((genre) => (
                   <span key={genre.id} className="genre-tag">
                     {genre.name}
                   </span>
@@ -132,7 +174,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
         </div>
         <div className="movie-description">
           <h3>Overview</h3>
-          <p>{mediaItem.overview || "No overview available."}</p>
+          <p>{details?.overview || mediaItem.overview || "No overview available."}</p>
         </div>
         {details && "production_companies" in details && details.production_companies && (
           <div className="production-companies">
@@ -165,7 +207,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
     return (
       <div className="cast-grid">
         {details.credits.cast.slice(0, 20).map((actor: Cast) => (
-          <div key={actor.id} className="cast-card">
+          <div key={actor.id} className="cast-card" onClick={() => handleActorClick(actor)}>
             <img
               src={getImageUrl(actor.profile_path, "w185") || "/placeholder.svg?height=250&width=200"}
               alt={actor.name}
@@ -177,6 +219,14 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
             <div className="cast-info">
               <h4 className="cast-name">{actor.name}</h4>
               <p className="cast-character">{actor.character}</p>
+            </div>
+            <div className="cast-overlay">
+              <div className="cast-overlay-content">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span>View Profile</span>
+              </div>
             </div>
           </div>
         ))}
@@ -230,7 +280,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
       <div
         className="hero-section"
         style={{
-          backgroundImage: `url(${backdropUrl || "/placeholder.svg?height=500&width=1200"})`,
+          backgroundImage: `url(${backdropUrl})`,
         }}
       >
         <div className="hero-overlay"></div>
@@ -252,12 +302,22 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack }
             <div className="hero-metadata">
               <span className="media-type-badge">{isMovie ? "Movie" : "TV Show"}</span>
               <span className="release-year">{releaseDate ? new Date(releaseDate).getFullYear() : "N/A"}</span>
-              <span className="rating">⭐ {mediaItem.vote_average?.toFixed(1) || "N/A"}</span>
+              <span className="rating">
+                ⭐ {(details?.vote_average || mediaItem.vote_average)?.toFixed(1) || "N/A"}
+              </span>
               {details && "runtime" in details && details.runtime && (
                 <span className="runtime">⏱ {formatRuntime(details.runtime)}</span>
               )}
+              {/* {details &&
+                "episode_run_time" in details &&
+                details.episode_run_time &&
+                details.episode_run_time.length > 0 && (
+                  <span className="runtime">⏱ {formatRuntime(details.episode_run_time[0])} / episode</span>
+                )} */}
             </div>
-            <p className="hero-overview">{mediaItem.overview?.substring(0, 200) + "..." || "No overview available."}</p>
+            <p className="hero-overview">
+              {(details?.overview || mediaItem.overview)?.substring(0, 200) + "..." || "No overview available."}
+            </p>
           </div>
         </div>
       </div>

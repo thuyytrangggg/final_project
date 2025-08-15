@@ -3,8 +3,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 40px;
-  background: transparent; 
-  backdrop-filter: blur(0px); 
+  background: transparent;
+  backdrop-filter: blur(0px);
   position: fixed;
   top: 0;
   width: 100%;
@@ -26,24 +26,13 @@
   align-items: flex-start;
   gap: 2px;
   cursor: pointer;
-  margin-right: 16px; 
-}
-
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #ffc107, #ff9800); 
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
+  margin-right: 16px;
 }
 
 .logo-text {
   font-size: 26px;
   font-weight: 800;
-  color: #fefdfd;
+  color: #15f72f;
   margin: 0;
   letter-spacing: 1px;
   cursor: pointer;
@@ -51,13 +40,12 @@
   font-family: "Anton", sans-serif;
 }
 
-
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px; 
+  gap: 16px;
   flex: 1;
-  justify-content: flex-end; 
+  justify-content: flex-end;
 }
 
 .nav {
@@ -70,7 +58,7 @@
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 550;
   transition: all 0.3s ease;
   position: relative;
   padding: 8px 0;
@@ -79,16 +67,16 @@
   align-items: center;
   gap: 4px;
   border: none;
-  background: none; 
+  background: none;
 }
 
 .nav-link:hover {
-  color: #00d4ff;
+  color: #15f72f;
 }
 
 .nav-link.active-nav-link {
-  color: #ffffff; 
-  font-weight: 700; 
+  color: #15f72f;
+  font-weight: 700;
 }
 
 .nav-link.explore {
@@ -109,8 +97,6 @@
 .nav-link button {
   background: none;
   border: none;
-  color: inherit;
-  font: inherit;
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -122,34 +108,35 @@
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%; 
-  max-width: 250px; 
+  width: 100%;
+  max-width: 250px;
   margin-left: auto;
 }
 
 .search-input {
-  background: rgba(255, 255, 255, 0.1); 
-  color: white; 
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
   padding: 12px 50px 12px 20px;
   border-radius: 25px;
   font-size: 14px;
-  width: 100%;
   outline: none;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: none; 
+  border: none;
 }
 
 .search-input::placeholder {
-  color: #bbb; 
+  color: #bbb;
   font-size: 14px;
 }
 
 .search-input:focus {
-  background: rgba(40, 40, 40, 0.1); 
+  background: rgba(40, 40, 40, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
-  border: 1px solid #fff; 
+  border: 1px solid #15f72f;
+}
 
 .search-btn {
   position: absolute;
@@ -166,7 +153,7 @@
 }
 
 .search-btn:hover {
-  color: white; 
+  color: white;
 }
 
 .search-btn svg {
@@ -179,125 +166,59 @@
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  justify-content: center; 
+  justify-content: center;
   white-space: nowrap;
   background: none;
   border: none;
   box-shadow: none;
   color: white;
-  padding: 0; 
+  padding: 0;
 }
 
 .header-btn:hover {
-  transform: none; 
+  transform: none;
 }
 
 .clock-btn {
   width: 40px;
   height: 40px;
-  border-radius: 50%; 
+  border-radius: 50%;
   border: none;
   color: white;
   flex-shrink: 0;
 }
 
-.clock-btn:hover {
+/* .clock-btn:hover {
   border-color: #00d4ff; 
   color: #00d4ff;
-}
+} */
 
 .language-btn {
-  padding: 8px 12px; 
+  padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.8); 
-  font-size: 14px; 
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  font-size: 14px;
   color: white;
   flex-shrink: 0;
 }
 
-.language-btn:hover {
-  border-color: #00d4ff; 
+/* .language-btn:hover {
+  border-color: #00d4ff;
   color: #00d4ff;
-}
+} */
 
 .profile-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   background-color: #ffe0b2;
-  color: #ff6b35; 
+  color: #ff6b35;
   flex-shrink: 0;
 }
 
 .profile-btn:hover {
-  background-color: #ffcc80; 
-  color: #ff6b35; 
-}
-
-.download-app-btn {
-  background: rgba(30, 30, 30, 0.8); 
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  gap: 8px;
-}
-
-.download-app-btn:hover {
-  background: rgba(40, 40, 40, 0.95);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.download-logo-icon {
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #ffc107, #ff9800);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-}
-
-.download-text-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.1;
-}
-
-.download-label {
-  font-size: 11px;
-  color: #bbb;
-}
-
-.download-app-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-}
-
-.vip-btn {
-  background: rgba(30, 30, 30, 0.8);
-  border: none;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  gap: 6px;
-}
-
-.vip-btn:hover {
-  background: rgba(40, 40, 40, 0.95); 
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #ffcc80;
+  color: #ff6b35;
 }
 
 .search-results {
@@ -403,7 +324,7 @@
   }
 
   .search-container {
-    max-width: 200px; 
+    max-width: 200px;
   }
 
   .logo-text {
@@ -423,11 +344,11 @@
   .header-right {
     width: 100%;
     flex: none;
-    justify-content: space-between; 
+    justify-content: space-between;
   }
 
   .header-left {
-    order: -1; 
+    order: -1;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -436,7 +357,7 @@
     gap: 20px;
     justify-content: center;
     flex-wrap: wrap;
-    width: 100%; 
+    width: 100%;
   }
 
   .header-right {
@@ -446,8 +367,8 @@
   }
 
   .search-container {
-    max-width: 100%; 
-    margin-left: 0; 
+    max-width: 100%;
+    margin-left: 0;
     order: 1;
   }
 
@@ -503,12 +424,11 @@
 }
 
 .header.scrolled {
-  background: #000; 
-  backdrop-filter: blur(0px); 
+  background: #000;
+  backdrop-filter: blur(0px);
 }
 
 .header.scrolled:hover {
-  background: #000; 
+  background: #000;
   backdrop-filter: blur(0px);
-}
 }

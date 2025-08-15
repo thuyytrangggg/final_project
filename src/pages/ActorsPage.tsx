@@ -9,7 +9,7 @@ import "./ActorsPage.css"
 
 interface ActorsPageProps {
   onBack: () => void
-  onActorClick?: (actorData: any) => void
+  onActorClick?: (actorId: number) => void
 }
 
 const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
@@ -96,7 +96,7 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
   const handleActorClick = (actor: Actor) => {
     console.log("Selected actor:", actor)
     if (onActorClick) {
-      onActorClick(actor)
+      onActorClick(actor.id)
     }
   }
 
@@ -149,11 +149,11 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
           <input
             type="text"
             placeholder="Search for actors..."
-            className="search-input"
+            className="search-input-actor"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
           />
-          <button className="search-btn">
+          <button className="search-btn-actor">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
@@ -165,7 +165,7 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
             </svg>
           </button>
           {searchQuery && (
-            <button className="clear-search-btn" onClick={clearSearch}>
+            <button className="clear-search-btn-actor" onClick={clearSearch}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M18 6L6 18M6 6L18 18"

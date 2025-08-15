@@ -232,7 +232,6 @@
   margin: 0;
 }
 
-/* Loading and Error States */
 .loading-state,
 .error-state {
   display: flex;
@@ -267,7 +266,6 @@
   background-color: #f40612;
 }
 
-/* Scroll to Top Button */
 .scroll-to-top {
   position: fixed;
   bottom: 30px;

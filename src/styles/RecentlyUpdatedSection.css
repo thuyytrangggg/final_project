@@ -1,278 +1,399 @@
 .recently-updated-section {
-  margin-bottom: 50px;
-}
-
-.section-header {
-  margin-bottom: 20px;
+  margin-bottom: 40px;
+  color: #e0e0e0;
+  position: relative;
+  z-index: 10;
+  margin-top: -270px;
 }
 
 .section-title {
-  font-size: 20px;
   font-weight: 600;
   color: white;
+  margin-bottom: 20px;
+  text-shadow: 4px 3px 4px rgba(0, 0, 0, 0.9);
 }
 
 .recent-container {
   position: relative;
   display: flex;
   align-items: center;
+  background: transparent;
+  border-radius: 12px;
+  position: relative; 
+  overflow: visible;
 }
+
 
 .recent-items {
   display: flex;
-  gap: 20px;
+  gap: 15px; 
   overflow-x: auto;
-  padding-bottom: 10px;
+  padding-bottom: 10px; 
   flex: 1;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+  scroll-behavior: smooth;
 }
 
+
 .recent-items::-webkit-scrollbar {
-  display: none;
+  display: none; 
 }
 
 .recent-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 200px;
-  height: 100px;
+  position: relative;
+  flex: 0 0 196.5px; 
+  height: 320px; 
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: transform 0.3s ease;
-  border-radius: 6px;
-}
-
-.recent-item:hover {
-  transform: scale(1.02);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.recent-item.loading {
-  cursor: default;
-}
-
-.recent-item.loading:hover {
-  transform: none;
-  background: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #e0e0e0;
+  background-color: transparent; 
 }
 
 .recent-poster {
-  width: 60px;
-  height: 100px;
-  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #333; 
   overflow: hidden;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .recent-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
-.recent-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
+.recent-poster::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30%; 
+  background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+  pointer-events: none; /* click xuyên qua overlay */
+  z-index: 2; /* trên ảnh dưới text */
 }
 
-.recent-title {
-  font-size: 16px;
-  font-weight: 400;
+.badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  background-color: #09ae1c;
+  font-weight: bold;
   color: white;
-  margin: 0;
+  z-index: 3;
+}
+
+.rating-badge {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffc107;
+  z-index: 3;
+}
+
+.rating-badge svg {
+  color: #ffc107;
+}
+
+.rating-value {
+  background: #ffc107;
+  background-clip: text;
+  color: #ffc107;
+}
+
+
+.episode-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85em;
+  color: #ccc;
+}
+
+.episode-info svg {
+  width: 16px;
+  height: 16px;
+  color: #15f72f;
+}
+
+.episode-text {
+  margin-left: 5px;
+  color: #999;
+}
+
+.recent-title-below {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.903);
+  margin: 10px 0 0;
+  padding: 0 0 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.recent-subtitle {
-  font-size: 14px;
-  color: #ccc;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.recent-time {
-  font-size: 14px;
-  color: #ccc;
-  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
 }
 
 .nav-arrow {
-  background: #fff;
+  background: transparent;
   border: none;
-  color: black;
-  width: 80px;
-  height: 80px;
+  color: rgba(255, 255, 255, 0.811);
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-left: 15px;
-  flex-shrink: 0;
-}
-
-.nav-arrow:hover {
-  /* background: rgba(255, 255, 255, 0.2); */
-  transform: scale(1.1);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
 }
 
 .nav-arrow svg {
-  width: 16px;
-  height: 16px;
+  width: 35px;
+  height: 35px;
 }
 
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 75%
-  );
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+.nav-arrow:hover {
+  transform: translateY(-50%) scale(1.1);
+  color: #fff;
 }
 
-.skeleton-text {
-  height: 12px;
-  border-radius: 4px;
-  margin-bottom: 4px;
+.nav-arrow.left-arrow {
+  left: -50px;
 }
 
-.skeleton-title {
-  width: 80%;
-  height: 14px;
+.nav-arrow.right-arrow {
+  right: -50px;
 }
 
-.skeleton-subtitle {
-  width: 60%;
-}
-
-.skeleton-time {
-  width: 40%;
-  height: 10px;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Error States */
-.error-message {
+.loading-state,
+.error-state {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 15px;
-  padding: 40px;
+  min-height: 200px;
   color: #ccc;
+  font-size: 1.2em;
   text-align: center;
 }
 
-.error-message button {
+.loading-spinner {
+  border: 4px solid #333;
+  border-top: 4px solid #e50914;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error-state button {
   background-color: #e50914;
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 5px;
   cursor: pointer;
+  margin-top: 20px;
+  font-size: 1em;
   transition: background-color 0.3s;
 }
 
-.error-message button:hover {
+.error-state button:hover {
   background-color: #f40612;
 }
 
-@media (max-width: 768px) {
-  .recent-items {
-    gap: 15px;
+@media (max-width: 1200px) {
+  .recently-updated-section {
+    margin-top: -100px; /
   }
 
   .recent-item {
-    min-width: 180px;
-    gap: 10px;
-    padding: 6px;
+    flex: 0 0 180px;
+    height: 270px;
   }
 
-  .recent-poster {
-    width: 40px;
-    height: 55px;
-  }
-
-  .recent-title {
-    font-size: 13px;
-  }
-
-  .recent-subtitle {
+  .rating-badge {
+    padding: 3px 6px;
     font-size: 11px;
+    bottom: 8px;
+    left: 8px;
   }
 
-  .recent-time {
+  .rating-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .rating-value {
     font-size: 10px;
-  }
-
-  .nav-arrow {
-    width: 32px;
-    height: 32px;
-    margin-left: 10px;
-  }
-
-  .nav-arrow svg {
-    width: 14px;
-    height: 14px;
   }
 }
 
-@media (max-width: 480px) {
-  .recent-items {
-    gap: 12px;
+@media (max-width: 992px) {
+  .recently-updated-section {
+    margin-top: -80px; 
   }
 
   .recent-item {
-    min-width: 160px;
-    gap: 8px;
-    padding: 4px;
+    flex: 0 0 160px;
+    height: 240px;
+  }
+  .recent-overlay-title {
+    font-size: 1em;
+  }
+  .episode-info {
+    font-size: 0.8em;
+  }
+  .recent-title-below {
+    font-size: 0.9em;
   }
 
-  .recent-poster {
-    width: 35px;
-    height: 50px;
+  .rating-badge {
+    padding: 3px 6px;
+    font-size: 11px;
+    bottom: 8px;
+    left: 8px;
   }
 
-  .recent-title {
-    font-size: 12px;
+  .rating-badge svg {
+    width: 10px;
+    height: 10px;
   }
 
-  .recent-subtitle {
+  .rating-value {
     font-size: 10px;
   }
+}
 
-  .recent-time {
-    font-size: 9px;
+@media (max-width: 768px) {
+  .recently-updated-section {
+    padding: 0 15px;
+    margin-top: -60px; 
+  }
+  .section-title {
+    font-size: 1.8em;
+  }
+  .recent-container {
+    padding: 15px 10px;
+  }
+  .recent-item {
+    flex: 0 0 140px;
+    height: 210px;
+  }
+  .recent-overlay {
+    padding: 10px;
+  }
+  .badge {
+    padding: 3px 6px;
+    font-size: 0.7em;
+  }
+  .nav-arrow {
+    width: 35px;
+    height: 35px;
+  }
+  .nav-arrow svg {
+    width: 18px;
+    height: 18px;
   }
 
+  .rating-badge {
+    padding: 2px 5px;
+    font-size: 10px;
+    bottom: 6px;
+    left: 6px;
+    border-radius: 8px;
+  }
+
+  .rating-badge svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .rating-value {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 576px) {
+  .recently-updated-section {
+    padding: 0 10px;
+    margin-top: -40px; 
+  }
+  .section-title {
+    font-size: 1.5em;
+  }
+  .recent-container {
+    padding: 10px 5px;
+  }
+  .recent-item {
+    flex: 0 0 120px;
+    height: 180px;
+  }
+  .recent-overlay-title {
+    font-size: 0.9em;
+  }
+  .episode-info {
+    font-size: 0.75em;
+  }
+  .recent-title-below {
+    font-size: 0.85em;
+  }
   .nav-arrow {
     width: 30px;
     height: 30px;
-    margin-left: 8px;
+    opacity: 1; 
+  }
+  .nav-arrow svg {
+    width: 16px;
+    height: 16px;
   }
 
-  .nav-arrow svg {
-    width: 12px;
-    height: 12px;
+  .rating-badge {
+    padding: 2px 4px;
+    font-size: 9px;
+    bottom: 5px;
+    left: 5px;
+  }
+
+  .rating-badge svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .rating-value {
+    font-size: 8px;
   }
 }

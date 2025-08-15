@@ -7,24 +7,22 @@ import RecentlyUpdatedSection from "./components/RecentlyUpdatedSection"
 import MovieSection from "./components/MovieSection"
 import LoadingSpinner from "./components/LoadingSpinner"
 import TopicContentPage from "./pages/TopicContentPage"
+import TopicMoviesPage from "./pages/TopicMoviesPage"
 import GenreMoviesPage from "./pages/GenreMoviesPage"
 import CountryMoviesPage from "./pages/CountryMoviesPage"
 import MoviesPage from "./pages/MoviesPage"
 import SeriesPage from "./pages/SeriesPage"
 import ActorsPage from "./pages/ActorsPage"
+import ActorDetailsPage from "./pages/ActorDetailsPage"
 import MovieDetailsPage from "./pages/MovieDetailsPage"
 import SearchResultsPage from "./pages/SearchResultsPage"
+import FilteredResultsPage from "./pages/FilteredResultsPage" // Import the new page
+import AccountPage from "./pages/AccountPage" // Import the new AccountPage
 import { useMovieData } from "./hooks/useMovieData"
 import { getImageUrl } from "./config/api"
-import type { Genre, MediaItem } from "./types/mediaTypes"
+import type { Genre, MediaItem, FilterOptions } from "./types/mediaTypes"
+import type { TopicData } from "./data/topicsData"
 import "./App.css"
-
-interface Topic {
-  id: number
-  name: string
-  background: string
-  genreIds: number[]
-}
 
 interface Country {
   iso_3166_1: string
@@ -36,11 +34,14 @@ function App() {
   const { movieData, genres, loading, error } = useMovieData()
   const [currentPage, setCurrentPage] = useState("home")
   const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null)
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
+  const [selectedTopic, setSelectedTopic] = useState<TopicData | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [selectedMediaItem, setSelectedMediaItem] = useState<MediaItem | null>(null)
+  const [selectedActorId, setSelectedActorId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [previousPage, setPreviousPage] = useState<string>("home") // Track previous page for navigation
+  const [appliedFilters, setAppliedFilters] = useState<FilterOptions | null>(null) // State for applied filters
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,56 +57,46 @@ function App() {
   }
 
   const handleNavigate = (page: string, data?: any) => {
+    setPreviousPage(currentPage) // Store current page as previous
     setCurrentPage(page)
+
+    // Reset all specific selections
+    setSelectedGenre(null)
+    setSelectedTopic(null)
+    setSelectedCountry(null)
+    setSelectedMediaItem(null)
+    setSelectedActorId(null)
+    setSearchQuery("")
+    setAppliedFilters(null) // Clear filters on general navigation
 
     if (page === "genre-movies" && data?.selectedGenre) {
       setSelectedGenre(data.selectedGenre)
-      setSelectedTopic(null)
-      setSelectedCountry(null)
-      setSelectedMediaItem(null)
-      setSearchQuery("")
     } else if (page === "topic-movies" && data?.selectedTopic) {
       setSelectedTopic(data.selectedTopic)
-      setSelectedGenre(null)
-      setSelectedCountry(null)
-      setSelectedMediaItem(null)
-      setSearchQuery("")
     } else if (page === "country-movies" && data?.selectedCountry) {
       setSelectedCountry(data.selectedCountry)
-      setSelectedGenre(null)
-      setSelectedTopic(null)
-      setSelectedMediaItem(null)
-      setSearchQuery("")
     } else if (page === "movie-details" && data?.mediaItem) {
       setSelectedMediaItem(data.mediaItem)
-      setSelectedGenre(null)
-      setSelectedTopic(null)
-      setSelectedCountry(null)
-      setSearchQuery("")
+    } else if (page === "actor-details" && data?.actorId) {
+      setSelectedActorId(data.actorId)
     } else if (page === "search-results" && data?.searchQuery) {
       setSearchQuery(data.searchQuery)
-      setSelectedGenre(null)
-      setSelectedTopic(null)
-      setSelectedCountry(null)
-      setSelectedMediaItem(null)
-    } else if (page === "movies" || page === "series" || page === "actor") {
-      setSelectedGenre(null)
-      setSelectedTopic(null)
-      setSelectedCountry(null)
-      setSelectedMediaItem(null)
-      setSearchQuery("")
-    } else {
-      setSelectedGenre(null)
-      setSelectedTopic(null)
-      setSelectedCountry(null)
-      setSelectedMediaItem(null)
-      setSearchQuery("")
+    } else if (page === "filtered-results" && data?.filters) {
+      setAppliedFilters(data.filters)
     }
+    // No specific data needed for "account" page
   }
 
-  const handleTopicSelect = (topic: Topic) => {
+  const handleTopicSelect = (topic: TopicData) => {
     setSelectedTopic(topic)
+    setPreviousPage(currentPage)
     setCurrentPage("topic-movies")
+  }
+
+  const handleActorClick = (actorId: number) => {
+    setSelectedActorId(actorId)
+    setPreviousPage(currentPage)
+    setCurrentPage("actor-details")
   }
 
   const handleBackToHome = () => {
@@ -114,33 +105,62 @@ function App() {
     setSelectedTopic(null)
     setSelectedCountry(null)
     setSelectedMediaItem(null)
+    setSelectedActorId(null)
     setSearchQuery("")
+    setAppliedFilters(null)
+    setPreviousPage("home")
   }
 
   const handleBackToTopics = () => {
     setCurrentPage("topics")
     setSelectedTopic(null)
+    setPreviousPage("topics")
+  }
+
+  const handleBackToActors = () => {
+    setCurrentPage("actor")
+    setSelectedActorId(null)
+    setPreviousPage("actor")
+  }
+
+  const handleBackToPrevious = () => {
+    // Navigate back to the previous page
+    if (previousPage === "movie-details" && selectedMediaItem) {
+      setCurrentPage("movie-details")
+    } else if (previousPage === "actor") {
+      setCurrentPage("actor")
+      setSelectedActorId(null)
+    } else if (previousPage === "topics" && appliedFilters) {
+      // If coming from filtered results, go back to topics page with filter panel open
+      setCurrentPage("topics")
+      setAppliedFilters(null) // Clear filters when going back to topics
+    } else {
+      handleBackToHome()
+    }
   }
 
   const handleMovieClick = (item: any) => {
+    // Check if it's already a MediaItem (from API) or needs conversion (from MovieCard)
     let mediaItem: MediaItem
 
     if (item.media_type) {
+      // Already a MediaItem from API or from MovieCard with media_type
       mediaItem = item
     } else {
+      // Convert from MovieCard format (legacy or simplified) to MediaItem
       mediaItem = {
         id: item.id,
         title: item.title,
-        name: item.title,
+        name: item.title, // For TV shows, this will be overwritten by actual name if media_type is 'tv'
         poster_path: item.poster?.includes("placeholder") ? null : extractPosterPath(item.poster),
-        backdrop_path: null,
+        backdrop_path: item.backdrop_path || null, // Use backdrop_path if available from MovieCard
         vote_average: item.rating || 0,
-        release_date: `${item.year}-01-01`,
-        first_air_date: `${item.year}-01-01`,
+        release_date: `${item.year}-01-01`, // Default for movies
+        first_air_date: `${item.year}-01-01`, // Default for TV shows
         overview: `${item.title} - ${item.genres?.join(", ") || ""}`,
-        genre_ids: [],
+        genre_ids: [], // Will be fetched by MovieDetailsPage
         genres: item.genres?.map((genre: string, index: number) => ({ id: index, name: genre })) || [],
-        media_type: "movie" as const,
+        media_type: "movie" as const, // Default to movie, will be corrected by MovieDetailsPage if it's TV
         adult: false,
         original_language: "en",
         original_title: item.title,
@@ -150,13 +170,21 @@ function App() {
     }
 
     setSelectedMediaItem(mediaItem)
+    setPreviousPage(currentPage)
     setCurrentPage("movie-details")
   }
 
+  // Helper function to extract poster path from full URL
   const extractPosterPath = (posterUrl: string): string | null => {
     if (!posterUrl || posterUrl.includes("placeholder")) return null
     const match = posterUrl.match(/\/w\d+(.+)$/)
     return match ? match[1] : null
+  }
+
+  const handleApplyFilters = (filters: FilterOptions) => {
+    setAppliedFilters(filters)
+    setPreviousPage("topics") // Set previous page to topics
+    setCurrentPage("filtered-results")
   }
 
   if (loading) {
@@ -173,10 +201,10 @@ function App() {
     )
   }
 
-  const convertToMovieFormat = (items: any[]) => {
+  const convertToMovieFormat = (items: MediaItem[]) => {
     return items.map((item) => ({
       id: item.id,
-      title: item.title || item.name || "Unknown Title",
+      title: item.media_type === "movie" ? item.title || "Unknown Title" : item.name || "Unknown Title", // Correctly use title for movie, name for TV
       poster: getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200",
       year: item.release_date
         ? new Date(item.release_date).getFullYear()
@@ -189,10 +217,13 @@ function App() {
           ?.slice(0, 2)
           .map((id: number) => genres[id])
           .filter(Boolean) || [],
+      media_type: item.media_type, // Pass media_type
+      backdrop_path: item.backdrop_path, // Pass backdrop_path
     }))
   }
 
-  const heroMovies = movieData.popularMovies.slice(0, 10)
+  // Get trending movies for hero section
+  const heroMovies = movieData.trending.slice(0, 10) 
 
   return (
     <div className="app">
@@ -254,11 +285,15 @@ function App() {
       )}
 
       {currentPage === "topics" && (
-        <TopicContentPage onTopicSelect={handleTopicSelect} onMovieClick={handleMovieClick} />
+        <TopicContentPage
+          onTopicSelect={handleTopicSelect}
+          onMovieClick={handleMovieClick}
+          onApplyFilters={handleApplyFilters}
+        />
       )}
 
       {currentPage === "topic-movies" && selectedTopic && (
-        <TopicContentPage selectedTopic={selectedTopic} onBack={handleBackToTopics} onMovieClick={handleMovieClick} />
+        <TopicMoviesPage selectedTopic={selectedTopic} onBack={handleBackToTopics} onMovieClick={handleMovieClick} />
       )}
 
       {currentPage === "genre-movies" && selectedGenre && (
@@ -277,15 +312,30 @@ function App() {
 
       {currentPage === "series" && <SeriesPage onBack={handleBackToHome} onMovieClick={handleMovieClick} />}
 
-      {currentPage === "actor" && <ActorsPage onBack={handleBackToHome} />}
+      {currentPage === "actor" && <ActorsPage onBack={handleBackToHome} onActorClick={handleActorClick} />}
+
+      {currentPage === "actor-details" && selectedActorId && (
+        <ActorDetailsPage actorId={selectedActorId} onBack={handleBackToPrevious} onMovieClick={handleMovieClick} />
+      )}
 
       {currentPage === "search-results" && searchQuery && (
         <SearchResultsPage searchQuery={searchQuery} onBack={handleBackToHome} onMovieClick={handleMovieClick} />
       )}
 
       {currentPage === "movie-details" && selectedMediaItem && (
-        <MovieDetailsPage mediaItem={selectedMediaItem} onBack={handleBackToHome} />
+        <MovieDetailsPage mediaItem={selectedMediaItem} onBack={handleBackToPrevious} onActorClick={handleActorClick} />
       )}
+
+      {currentPage === "filtered-results" && appliedFilters && (
+        <FilteredResultsPage
+          filters={appliedFilters}
+          onBack={handleBackToTopics}
+          onMovieClick={handleMovieClick}
+          genres={genres}
+        />
+      )}
+
+      {currentPage === "account" && <AccountPage />}
     </div>
   )
 }
