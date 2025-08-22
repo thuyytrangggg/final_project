@@ -6,16 +6,16 @@ import { tmdbApi } from "../services/tmdbApi"
 import { getImageUrl } from "../config/api"
 import MovieCard from "../components/MovieCard"
 import LoadingSpinner from "../components/LoadingSpinner"
-import type { Movie, TVShow, Genre, MediaItem } from "../types/mediaTypes"
-import "./GenreMoviesPage.css"
+import type { MediaItem } from "../types/mediaTypes"
+import "./CategoryMoviesPage.css"
 
-interface GenreMoviesPageProps {
-  selectedGenre: Genre
+interface CategoryMoviesPageProps {
+  category: string
   onBack: () => void
   onMovieClick: (movie: any) => void
 }
 
-const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack, onMovieClick }) => {
+const CategoryMoviesPage: React.FC<CategoryMoviesPageProps> = ({ category, onBack, onMovieClick }) => {
   const [movies, setMovies] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,12 +24,13 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
   const [loadingMore, setLoadingMore] = useState(false)
   const [totalMovies, setTotalMovies] = useState(0)
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies")
 
+  // Scroll to top when component mounts or category changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [selectedGenre])
+  }, [category])
 
+  // Handle scroll to show/hide scroll to top button
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300)
@@ -43,11 +44,34 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  const fetchGenreData = async (genreId: number, pageNum: number, mediaType: "movies" | "tv") => {
-    if (mediaType === "movies") {
-      return await tmdbApi.discoverMoviesByGenre(genreId, pageNum)
-    } else {
-      return await tmdbApi.discoverTVShowsByGenre(genreId, pageNum)
+  const getCategoryTitle = (category: string) => {
+    const titles: { [key: string]: string } = {
+      trending: "Trending Now",
+      popularMovies: "Popular Movies",
+      nowPlaying: "Now Playing",
+      popularTVShows: "Popular TV Shows",
+      topRatedMovies: "Top Rated Movies",
+      topRatedTVShows: "Top Rated TV Shows",
+    }
+    return titles[category] || "Movies"
+  }
+
+  const fetchCategoryData = async (category: string, pageNum: number) => {
+    switch (category) {
+      case "trending":
+        return await tmdbApi.getTrending("all", "week", pageNum)
+      case "popularMovies":
+        return await tmdbApi.getPopularMovies(pageNum)
+      case "nowPlaying":
+        return await tmdbApi.getNowPlayingMovies(pageNum)
+      case "popularTVShows":
+        return await tmdbApi.getPopularTVShows(pageNum)
+      case "topRatedMovies":
+        return await tmdbApi.getTopRatedMovies(pageNum)
+      case "topRatedTVShows":
+        return await tmdbApi.getTopRatedTVShows(pageNum)
+      default:
+        return []
     }
   }
 
@@ -59,9 +83,9 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
       setHasMore(true)
       setTotalMovies(0)
 
-      // Load first 24 movies/shows (pages 1 and 2, each page has ~20 items)
-      const page1Data = await fetchGenreData(selectedGenre.id, 1, activeTab)
-      const page2Data = await fetchGenreData(selectedGenre.id, 2, activeTab)
+      // Load first 24 movies (pages 1 and 2, each page has ~20 items)
+      const page1Data = await fetchCategoryData(category, 1)
+      const page2Data = await fetchCategoryData(category, 2)
 
       const allMovies = [...page1Data, ...page2Data]
 
@@ -78,7 +102,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
       // Check if there are more movies available
       setHasMore(uniqueMovies.length >= 24 && page2Data.length > 0)
     } catch (err) {
-      setError("Failed to load content")
+      setError("Failed to load movies")
       console.error(err)
     } finally {
       setLoading(false)
@@ -87,7 +111,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
   useEffect(() => {
     loadInitialMovies()
-  }, [selectedGenre, activeTab])
+  }, [category])
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return
@@ -105,7 +129,8 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
       // Keep fetching until we have enough movies or no more pages
       while (newMovies.length < moviesNeeded && nextPage <= 50) {
-        const pageData = await fetchGenreData(selectedGenre.id, nextPage, activeTab)
+        // TMDB has max 500 pages, but we limit to 50 for performance
+        const pageData = await fetchCategoryData(category, nextPage)
 
         if (pageData.length === 0) {
           setHasMore(false)
@@ -134,7 +159,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
         setHasMore(false)
       }
     } catch (err) {
-      console.error("Failed to load more content:", err)
+      console.error("Failed to load more movies:", err)
     } finally {
       setLoadingMore(false)
     }
@@ -143,19 +168,23 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
   const convertToMovieFormat = (items: MediaItem[]) => {
     return items.map((item) => {
       // Determine if it's a movie or TV show
-      const isMovie = !!(item as Movie).title
-      const isTVShow = !!(item as TVShow).name
+      const isMovie = item.media_type === "movie" || (!item.media_type && item.title)
+      const isTVShow = item.media_type === "tv" || (!item.media_type && item.name)
 
       // Get the correct title
       let title = "Unknown Title"
-      if (isMovie && (item as Movie).title) {
-        title = (item as Movie).title
-      } else if (isTVShow && (item as TVShow).name) {
-        title = (item as TVShow).name
+      if (isMovie && item.title) {
+        title = item.title
+      } else if (isTVShow && item.name) {
+        title = item.name
+      } else if (item.original_title) {
+        title = item.original_title
+      } else if (item.original_name) {
+        title = item.original_name
       }
 
       // Get the correct date
-      const releaseDate = (item as Movie).release_date || (item as TVShow).first_air_date
+      const releaseDate = item.release_date || item.first_air_date
       const year = releaseDate ? new Date(releaseDate).getFullYear() : 2023
 
       return {
@@ -165,7 +194,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
         year: year,
         rating: item.vote_average || 0,
         genres: [],
-        media_type: activeTab === "movies" ? "movie" : "tv",
+        media_type: item.media_type || (isMovie ? "movie" : "tv"),
         backdrop_path: item.backdrop_path,
       }
     })
@@ -173,8 +202,8 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
   if (loading) {
     return (
-      <div className="genre-page">
-        <div className="genre-header">
+      <div className="category-page">
+        <div className="category-header">
           <button className="back-button" onClick={onBack}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -186,7 +215,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
               />
             </svg>
           </button>
-          <h1 className="genre-title">{selectedGenre.name}</h1>
+          <h1 className="category-title">{getCategoryTitle(category)}</h1>
         </div>
         <LoadingSpinner />
       </div>
@@ -195,8 +224,8 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
 
   if (error) {
     return (
-      <div className="genre-page">
-        <div className="genre-header">
+      <div className="category-page">
+        <div className="category-header">
           <button className="back-button" onClick={onBack}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -208,7 +237,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
               />
             </svg>
           </button>
-          <h1 className="genre-title">{selectedGenre.name}</h1>
+          <h1 className="category-title">{getCategoryTitle(category)}</h1>
         </div>
         <div className="error-message">
           <h2>Error</h2>
@@ -222,8 +251,8 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
   }
 
   return (
-    <div className="genre-page">
-      <div className="genre-header">
+    <div className="category-page">
+      <div className="category-header">
         <button className="back-button" onClick={onBack}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -240,22 +269,10 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
             <polyline points="14 6 6 12 14 18" />
           </svg>
         </button>
-        <h1 className="genre-title">{selectedGenre.name}</h1>
+        <h1 className="category-title">{getCategoryTitle(category)}</h1>
       </div>
 
-      <div className="media-tabs">
-        <button
-          className={`tab-button ${activeTab === "movies" ? "active" : ""}`}
-          onClick={() => setActiveTab("movies")}
-        >
-          Movies
-        </button>
-        <button className={`tab-button ${activeTab === "tv" ? "active" : ""}`} onClick={() => setActiveTab("tv")}>
-          TV Shows
-        </button>
-      </div>
-
-      <div className="genre-content">
+      <div className="category-content">
         <div className="movies-grid">
           {convertToMovieFormat(movies).map((movie) => (
             <MovieCard key={`${movie.id}-${movie.media_type}`} movie={movie} onMovieClick={onMovieClick} />
@@ -294,7 +311,9 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
       {showScrollTop && (
         <button className="scroll-to-top" onClick={scrollToTop}>
           <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Thân mũi tên */}
             <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            {/* Đầu mũi tên */}
             <polyline
               points="6 12 12 6 18 12"
               stroke="currentColor"
@@ -302,6 +321,7 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {/* Đường kẻ ngang*/}
             <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
@@ -310,4 +330,4 @@ const GenreMoviesPage: React.FC<GenreMoviesPageProps> = ({ selectedGenre, onBack
   )
 }
 
-export default GenreMoviesPage
+export default CategoryMoviesPage

@@ -15,10 +15,7 @@ import type {
 } from "../types/mediaTypes"
 
 class TMDBApi {
-  private async fetchFromTMDB<T>(
-    endpoint: string,
-    params: Record<string, string> = {}
-  ): Promise<T> {
+  private async fetchFromTMDB<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     const url = new URL(`${API_CONFIG.BASE_URL}${endpoint}`)
     url.searchParams.append("api_key", API_CONFIG.API_KEY)
 
@@ -40,11 +37,9 @@ class TMDBApi {
 
   async getTrending(
     mediaType: "all" | "movie" | "tv" = "all",
-    timeWindow: "day" | "week" = "week"
+    timeWindow: "day" | "week" = "week",
   ): Promise<MediaItem[]> {
-    const response = await this.fetchFromTMDB<TMDBResponse<MediaItem>>(
-      `/trending/${mediaType}/${timeWindow}`
-    )
+    const response = await this.fetchFromTMDB<TMDBResponse<MediaItem>>(`/trending/${mediaType}/${timeWindow}`)
     return response.results
   }
 
@@ -91,23 +86,25 @@ class TMDBApi {
   }
 
   async getMovieDetails(
-    movieId: number
+    movieId: number,
   ): Promise<MovieDetails & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }> {
-    return await this.fetchFromTMDB<
-      MovieDetails & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }
-    >(`/movie/${movieId}`, {
-      append_to_response: "credits,videos,similar,recommendations",
-    })
+    return await this.fetchFromTMDB<MovieDetails & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }>(
+      `/movie/${movieId}`,
+      {
+        append_to_response: "credits,videos,similar,recommendations",
+      },
+    )
   }
 
   async getTVShowDetails(
-    tvId: number
+    tvId: number,
   ): Promise<TVShow & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }> {
-    return await this.fetchFromTMDB<
-      TVShow & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }
-    >(`/tv/${tvId}`, {
-      append_to_response: "credits,videos,similar,recommendations",
-    })
+    return await this.fetchFromTMDB<TVShow & { credits?: { cast: Cast[] }; videos?: { results: Video[] } }>(
+      `/tv/${tvId}`,
+      {
+        append_to_response: "credits,videos,similar,recommendations",
+      },
+    )
   }
 
   async getMovieCredits(movieId: number): Promise<{ cast: Cast[]; crew: any[] }> {
@@ -154,9 +151,7 @@ class TMDBApi {
       query: encodeURIComponent(query),
       page: page.toString(),
     })
-    return response.results.filter(
-      (item) => item.media_type === "movie" || item.media_type === "tv"
-    )
+    return response.results.filter((item) => item.media_type === "movie" || item.media_type === "tv")
   }
 
   async discoverMoviesByGenre(genreId: number, page = 1): Promise<Movie[]> {
@@ -201,9 +196,7 @@ class TMDBApi {
   }
 
   async getMovieRecommendations(movieId: number): Promise<Movie[]> {
-    const response = await this.fetchFromTMDB<TMDBResponse<Movie>>(
-      `/movie/${movieId}/recommendations`
-    )
+    const response = await this.fetchFromTMDB<TMDBResponse<Movie>>(`/movie/${movieId}/recommendations`)
     return response.results
   }
 
@@ -261,12 +254,15 @@ class TMDBApi {
     if (options.countries && options.countries.length > 0) {
       params.with_origin_country = options.countries.join("|")
     }
+
+    // Fix year filtering - use the correct parameter and handle single year
     if (options.productionYears && options.productionYears.length > 0) {
-      if (options.queryYear) {
-        params.primary_release_year = options.queryYear
-      } else {
-        params.primary_release_year = options.productionYears[0].toString()
-      }
+      const year = options.productionYears[0] // Use first year only
+      params.primary_release_year = year.toString() // For movies
+      params.first_air_date_year = year.toString() // For TV shows
+    } else if (options.queryYear && options.queryYear.trim() !== "") {
+      params.primary_release_year = options.queryYear
+      params.first_air_date_year = options.queryYear
     }
 
     if (options.ageRatings.includes("T18")) {
@@ -275,15 +271,26 @@ class TMDBApi {
       params.include_adult = "false"
     }
 
+    console.log("API params:", params) // Debug log
+
     let movieResults: Movie[] = []
     let tvResults: TVShow[] = []
 
     if (options.contentTypes.includes("movie") || options.contentTypes.length === 0) {
-      const movieResponse = await this.fetchFromTMDB<TMDBResponse<Movie>>("/discover/movie", params)
+      const movieParams = { ...params }
+      // Remove TV-specific parameters for movie requests
+      delete movieParams.first_air_date_year
+
+      const movieResponse = await this.fetchFromTMDB<TMDBResponse<Movie>>("/discover/movie", movieParams)
       movieResults = movieResponse.results.map((m) => ({ ...m, media_type: "movie" as const }))
     }
+
     if (options.contentTypes.includes("tv") || options.contentTypes.length === 0) {
-      const tvResponse = await this.fetchFromTMDB<TMDBResponse<TVShow>>("/discover/tv", params)
+      const tvParams = { ...params }
+      // Remove movie-specific parameters for TV requests
+      delete tvParams.primary_release_year
+
+      const tvResponse = await this.fetchFromTMDB<TMDBResponse<TVShow>>("/discover/tv", tvParams)
       tvResults = tvResponse.results.map((t) => ({ ...t, media_type: "tv" as const }))
     }
 

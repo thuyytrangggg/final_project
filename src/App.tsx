@@ -16,8 +16,9 @@ import ActorsPage from "./pages/ActorsPage"
 import ActorDetailsPage from "./pages/ActorDetailsPage"
 import MovieDetailsPage from "./pages/MovieDetailsPage"
 import SearchResultsPage from "./pages/SearchResultsPage"
-import FilteredResultsPage from "./pages/FilteredResultsPage" // Import the new page
-import AccountPage from "./pages/AccountPage" // Import the new AccountPage
+import FilteredResultsPage from "./pages/FilteredResultsPage"
+import CategoryMoviesPage from "./pages/CategoryMoviesPage"
+import AccountPage from "./pages/AccountPage"
 import { useMovieData } from "./hooks/useMovieData"
 import { getImageUrl } from "./config/api"
 import type { Genre, MediaItem, FilterOptions } from "./types/mediaTypes"
@@ -30,6 +31,9 @@ interface Country {
   native_name: string
 }
 
+// Global scroll position storage
+const scrollPositions = new Map<string, number>()
+
 function App() {
   const { movieData, genres, loading, error } = useMovieData()
   const [currentPage, setCurrentPage] = useState("home")
@@ -40,8 +44,9 @@ function App() {
   const [selectedActorId, setSelectedActorId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [previousPage, setPreviousPage] = useState<string>("home") // Track previous page for navigation
-  const [appliedFilters, setAppliedFilters] = useState<FilterOptions | null>(null) // State for applied filters
+  const [previousPage, setPreviousPage] = useState<string>("home")
+  const [appliedFilters, setAppliedFilters] = useState<FilterOptions | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,12 +57,31 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Save scroll position when navigating away from a page
+  const saveScrollPosition = (page: string) => {
+    scrollPositions.set(page, window.scrollY)
+  }
+
+  // Restore scroll position immediately without animation
+  const restoreScrollPosition = (page: string) => {
+    const savedPosition = scrollPositions.get(page)
+    if (savedPosition !== undefined) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedPosition)
+      })
+    }
+  }
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleNavigate = (page: string, data?: any) => {
-    setPreviousPage(currentPage) // Store current page as previous
+    // Save current scroll position
+    saveScrollPosition(currentPage)
+
+    setPreviousPage(currentPage)
     setCurrentPage(page)
 
     // Reset all specific selections
@@ -67,7 +91,8 @@ function App() {
     setSelectedMediaItem(null)
     setSelectedActorId(null)
     setSearchQuery("")
-    setAppliedFilters(null) // Clear filters on general navigation
+    setAppliedFilters(null)
+    setSelectedCategory(null)
 
     if (page === "genre-movies" && data?.selectedGenre) {
       setSelectedGenre(data.selectedGenre)
@@ -83,17 +108,30 @@ function App() {
       setSearchQuery(data.searchQuery)
     } else if (page === "filtered-results" && data?.filters) {
       setAppliedFilters(data.filters)
+    } else if (page === "category-movies" && data?.category) {
+      setSelectedCategory(data.category)
     }
-    // No specific data needed for "account" page
+  }
+
+  const handleViewAllClick = (category: string) => {
+    console.log("View All clicked for category:", category)
+    // Save current scroll position before navigating
+    saveScrollPosition(currentPage)
+
+    setSelectedCategory(category)
+    setPreviousPage(currentPage)
+    setCurrentPage("category-movies")
   }
 
   const handleTopicSelect = (topic: TopicData) => {
+    saveScrollPosition(currentPage)
     setSelectedTopic(topic)
     setPreviousPage(currentPage)
     setCurrentPage("topic-movies")
   }
 
   const handleActorClick = (actorId: number) => {
+    saveScrollPosition(currentPage)
     setSelectedActorId(actorId)
     setPreviousPage(currentPage)
     setCurrentPage("actor-details")
@@ -108,59 +146,69 @@ function App() {
     setSelectedActorId(null)
     setSearchQuery("")
     setAppliedFilters(null)
+    setSelectedCategory(null)
     setPreviousPage("home")
+
+    // Restore scroll position for home page immediately
+    restoreScrollPosition("home")
   }
 
   const handleBackToTopics = () => {
     setCurrentPage("topics")
     setSelectedTopic(null)
     setPreviousPage("topics")
+
+    // Restore scroll position for topics page immediately
+    restoreScrollPosition("topics")
   }
 
   const handleBackToActors = () => {
     setCurrentPage("actor")
     setSelectedActorId(null)
     setPreviousPage("actor")
+
+    // Restore scroll position for actors page immediately
+    restoreScrollPosition("actor")
   }
 
   const handleBackToPrevious = () => {
-    // Navigate back to the previous page
     if (previousPage === "movie-details" && selectedMediaItem) {
       setCurrentPage("movie-details")
     } else if (previousPage === "actor") {
       setCurrentPage("actor")
       setSelectedActorId(null)
+      restoreScrollPosition("actor")
     } else if (previousPage === "topics" && appliedFilters) {
-      // If coming from filtered results, go back to topics page with filter panel open
       setCurrentPage("topics")
-      setAppliedFilters(null) // Clear filters when going back to topics
+      setAppliedFilters(null)
+      restoreScrollPosition("topics")
     } else {
       handleBackToHome()
     }
   }
 
   const handleMovieClick = (item: any) => {
-    // Check if it's already a MediaItem (from API) or needs conversion (from MovieCard)
+    // Save current scroll position
+    saveScrollPosition(currentPage)
+
     let mediaItem: MediaItem
 
     if (item.media_type) {
-      // Already a MediaItem from API or from MovieCard with media_type
       mediaItem = item
     } else {
-      // Convert from MovieCard format (legacy or simplified) to MediaItem
       mediaItem = {
         id: item.id,
         title: item.title,
-        name: item.title, // For TV shows, this will be overwritten by actual name if media_type is 'tv'
+        name: item.title,
         poster_path: item.poster?.includes("placeholder") ? null : extractPosterPath(item.poster),
-        backdrop_path: item.backdrop_path || null, // Use backdrop_path if available from MovieCard
+        backdrop_path: item.backdrop_path || null,
         vote_average: item.rating || 0,
-        release_date: `${item.year}-01-01`, // Default for movies
-        first_air_date: `${item.year}-01-01`, // Default for TV shows
+        release_date: `${item.year}-01-01`,
+        first_air_date: `${item.year}-01-01`,
         overview: `${item.title} - ${item.genres?.join(", ") || ""}`,
-        genre_ids: [], // Will be fetched by MovieDetailsPage
+        genre_ids: [],
         genres: item.genres?.map((genre: string, index: number) => ({ id: index, name: genre })) || [],
-        media_type: "movie" as const, // Default to movie, will be corrected by MovieDetailsPage if it's TV
+        media_type: "movie" as const,
         adult: false,
         original_language: "en",
         original_title: item.title,
@@ -174,7 +222,6 @@ function App() {
     setCurrentPage("movie-details")
   }
 
-  // Helper function to extract poster path from full URL
   const extractPosterPath = (posterUrl: string): string | null => {
     if (!posterUrl || posterUrl.includes("placeholder")) return null
     const match = posterUrl.match(/\/w\d+(.+)$/)
@@ -182,8 +229,9 @@ function App() {
   }
 
   const handleApplyFilters = (filters: FilterOptions) => {
+    saveScrollPosition(currentPage)
     setAppliedFilters(filters)
-    setPreviousPage("topics") // Set previous page to topics
+    setPreviousPage("topics")
     setCurrentPage("filtered-results")
   }
 
@@ -204,7 +252,7 @@ function App() {
   const convertToMovieFormat = (items: MediaItem[]) => {
     return items.map((item) => ({
       id: item.id,
-      title: item.media_type === "movie" ? item.title || "Unknown Title" : item.name || "Unknown Title", // Correctly use title for movie, name for TV
+      title: item.media_type === "movie" ? item.title || "Unknown Title" : item.name || "Unknown Title",
       poster: getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200",
       year: item.release_date
         ? new Date(item.release_date).getFullYear()
@@ -217,13 +265,12 @@ function App() {
           ?.slice(0, 2)
           .map((id: number) => genres[id])
           .filter(Boolean) || [],
-      media_type: item.media_type, // Pass media_type
-      backdrop_path: item.backdrop_path, // Pass backdrop_path
+      media_type: item.media_type,
+      backdrop_path: item.backdrop_path,
     }))
   }
 
-  // Get trending movies for hero section
-  const heroMovies = movieData.trending.slice(0, 10) 
+  const heroMovies = movieData.trending.slice(0, 10)
 
   return (
     <div className="app">
@@ -238,46 +285,62 @@ function App() {
             <RecentlyUpdatedSection onItemClick={handleMovieClick} />
             <MovieSection
               title="Trending Now"
-              movies={convertToMovieFormat(movieData.trending.slice(1, 11))}
+              movies={convertToMovieFormat(movieData.trending.slice(0, 10))}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="trending"
             />
             <MovieSection
               title="Popular Movies"
               movies={convertToMovieFormat(movieData.popularMovies)}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="popularMovies"
             />
             <MovieSection
               title="Now Playing"
               movies={convertToMovieFormat(movieData.nowPlaying)}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="nowPlaying"
             />
             <MovieSection
               title="Popular TV Shows"
               movies={convertToMovieFormat(movieData.popularTVShows)}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="popularTVShows"
             />
             <MovieSection
               title="Top Rated Movies"
               movies={convertToMovieFormat(movieData.topRatedMovies)}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="topRatedMovies"
             />
             <MovieSection
               title="Top Rated TV Shows"
               movies={convertToMovieFormat(movieData.topRatedTVShows)}
-              rows={2}
               onMovieClick={handleMovieClick}
+              onViewAllClick={handleViewAllClick}
+              category="topRatedTVShows"
             />
           </div>
           {showScrollTop && (
             <button className="scroll-to-top" onClick={scrollToTop}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M18 15L12 9L6 15"
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Thân mũi tên */}
+                <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                {/* Đầu mũi tên */}
+                <polyline
+                  points="6 12 12 6 18 12"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+                {/* Đường kẻ ngang*/}
+                <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
             </button>
           )}
@@ -333,6 +396,10 @@ function App() {
           onMovieClick={handleMovieClick}
           genres={genres}
         />
+      )}
+
+      {currentPage === "category-movies" && selectedCategory && (
+        <CategoryMoviesPage category={selectedCategory} onBack={handleBackToHome} onMovieClick={handleMovieClick} />
       )}
 
       {currentPage === "account" && <AccountPage />}

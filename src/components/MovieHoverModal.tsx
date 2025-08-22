@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { tmdbApi } from "../services/tmdbApi"
-import type { MovieDetails, TVDetails } from "../types/mediaTypes"
+import type { MovieDetails, TVShow } from "../types/mediaTypes"
 import "../styles/MovieHoverModal.css"
 
 interface MovieHoverModalProps {
@@ -18,10 +18,11 @@ interface MovieHoverModalProps {
     genres: string[]
     backdrop_path?: string
   }
+  onMovieClick?: (movieData: any) => void
 }
 
-const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, movie }) => {
-  const [movieDetails, setMovieDetails] = useState<MovieDetails | TVDetails | null>(null)
+const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, movie, onMovieClick }) => {
+  const [movieDetails, setMovieDetails] = useState<MovieDetails | TVShow | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, m
       try {
         setLoading(true)
         const details =
-          mediaType === "movie" ? await tmdbApi.getMovieDetails(movieId) : await tmdbApi.getTVDetails(movieId)
+          mediaType === "movie" ? await tmdbApi.getMovieDetails(movieId) : await tmdbApi.getTVShowDetails(movieId)
         setMovieDetails(details)
       } catch (error) {
         console.error("Error fetching movie details:", error)
@@ -58,30 +59,33 @@ const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, m
   const title =
     mediaType === "movie"
       ? (movieDetails as MovieDetails)?.title || movie.title
-      : (movieDetails as TVDetails)?.name || movie.title
+      : (movieDetails as TVShow)?.name || movie.title
 
   const releaseYear =
     mediaType === "movie"
       ? (movieDetails as MovieDetails)?.release_date?.split("-")[0] || movie.year
-      : (movieDetails as TVDetails)?.first_air_date?.split("-")[0] || movie.year
+      : (movieDetails as TVShow)?.first_air_date?.split("-")[0] || movie.year
 
   const genres = movieDetails?.genres?.map((g) => g.name) || movie.genres || []
   const rating = movieDetails?.vote_average || movie.rating || 8.0
   const overview = movieDetails?.overview || "No overview available."
 
-  const handlePlayClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log("Play clicked for:", movie.title)
-  }
-
-  const handleAddToFavorites = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log("Added to favorites:", movie.title)
+  const handlePlayClick = () => {
+    if (onMovieClick) {
+      // Convert movie data to match expected format
+      const movieData = {
+        ...movie,
+        id: movieId,
+        media_type: mediaType,
+        vote_average: movie.rating,
+        overview: movieDetails?.overview || "No overview available.",
+      }
+      onMovieClick(movieData)
+    }
   }
 
   return (
     <div className="movie-hover-modal">
-      {/* Backdrop section with play/favorite buttons */}
       <div className="modal-backdrop" style={{ backgroundImage: `url(${backdropUrl})` }}>
         <div className="modal-backdrop-overlay">
           <div className="modal-action-buttons">
@@ -90,17 +94,15 @@ const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, m
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
-            <button className="modal-favorite-button" onClick={handleAddToFavorites}>
+            <button className="modal-favorite-button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </button>
           </div>
         </div>
-        <div className="modal-free-badge">Free</div>
       </div>
 
-      {/* Movie information */}
       <div className="modal-content">
         <h3 className="modal-title">{title}</h3>
 
@@ -111,7 +113,6 @@ const MovieHoverModal: React.FC<MovieHoverModalProps> = ({ movieId, mediaType, m
             </svg>
             <span>{rating.toFixed(1)}</span>
           </div>
-          <div className="modal-age-rating">13+</div>
           <div className="modal-year">{releaseYear}</div>
         </div>
 

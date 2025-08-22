@@ -107,7 +107,12 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onMovieClick }) => {
       {/* Hover Modal - gắn chặt với card và cuộn cùng card */}
       {showModal && (
         <div className="movie-hover-modal-container">
-          <MovieHoverModal movieId={movie.id} mediaType={movie.media_type || "movie"} movie={movie} />
+          <MovieHoverModal
+            movieId={movie.id}
+            mediaType={movie.media_type || "movie"}
+            movie={movie}
+            onMovieClick={onMovieClick}
+          />
         </div>
       )}
     </div>

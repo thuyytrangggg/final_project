@@ -1,7 +1,6 @@
 .movie-card-wrapper {
   position: relative;
   display: flex;
-  /* Cho phép modal thoát khỏi container */
   overflow: visible;
 }
 
@@ -106,17 +105,14 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 400px;
+  width: 380px;
   height: 500px;
-  /* Transform để modal căn giữa và lớn hơn, đồng thời thoát khỏi container */
-  transform: translate(-50%, -50%) scale(1.3);
+  transform: translate(-50%, -50%) scale(0.7);
   z-index: 99;
   pointer-events: auto;
-  /* Đảm bảo modal không bị clip */
   overflow: visible;
 }
 
-/* Responsive adjustments */
 @media (max-width: 1200px) {
   .movie-card {
     flex: 0 0 180px;

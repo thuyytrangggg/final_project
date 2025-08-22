@@ -35,29 +35,30 @@
   background-color: #f40612;
 }
 
-/* Scroll to Top Button Styles */
 .scroll-to-top {
   position: fixed;
   bottom: 30px;
   right: 30px;
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #e50914, #ff6b35);
+  background: linear-gradient(135deg, #07ab0fc3, #22fb16b8);
   border: none;
   border-radius: 50%;
-  color: white;
+  color: rgb(239, 239, 239);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+  box-shadow: 0 4px 15px rgba(27, 229, 9, 0.2);
   transition: all 0.3s ease;
   z-index: 1000;
 }
 
 .scroll-to-top:hover {
+  background: linear-gradient(135deg, #08a30f, #22fb16);
+    color: rgb(255, 255, 255);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.6);
+  box-shadow: 0 6px 20px rgba(31, 229, 9, 0.4);
 }
 
 @media (max-width: 768px) {

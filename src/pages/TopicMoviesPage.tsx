@@ -4,7 +4,9 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { tmdbApi } from "../services/tmdbApi"
 import { getImageUrl } from "../config/api"
-import type { Movie, TVShow } from "../types/mediaTypes"
+import MovieCard from "../components/MovieCard"
+import LoadingSpinner from "../components/LoadingSpinner"
+import type { MediaItem } from "../types/mediaTypes"
 import type { TopicData } from "../data/topicsData"
 import "./TopicMoviesPage.css"
 
@@ -15,222 +17,280 @@ interface TopicMoviesPageProps {
 }
 
 const TopicMoviesPage: React.FC<TopicMoviesPageProps> = ({ selectedTopic, onBack, onMovieClick }) => {
-  const [movies, setMovies] = useState<(Movie | TVShow)[]>([])
+  const [movies, setMovies] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [activeTab, setActiveTab] = useState<"movies" | "tv">("movies")
 
+  // Scroll to top when component mounts or topic changes
   useEffect(() => {
-    const fetchContent = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [selectedTopic])
 
-        let allContent: (Movie | TVShow)[] = []
-
-        // Fetch content for each genre ID in the topic
-        const promises = selectedTopic.genreIds.map(async (genreId) => {
-          if (activeTab === "movies") {
-            return await tmdbApi.discoverMoviesByGenre(genreId, page)
-          } else {
-            return await tmdbApi.discoverTVShowsByGenre(genreId, page)
-          }
-        })
-
-        const results = await Promise.all(promises)
-        allContent = results.flat()
-
-        // Remove duplicates and sort by popularity
-        const uniqueContent = allContent
-          .filter((item, index, self) => index === self.findIndex((i) => i.id === item.id))
-          .sort((a, b) => b.popularity - a.popularity)
-
-        if (page === 1) {
-          setMovies(uniqueContent.slice(0, 20))
-        } else {
-          setMovies((prev) => [...prev, ...uniqueContent.slice(0, 20)])
-        }
-
-        setTotalPages(Math.min(10, Math.ceil(uniqueContent.length / 20)))
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch content")
-        console.error("Error fetching content:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchContent()
-  }, [selectedTopic.genreIds, page, activeTab])
-
+  // Show/hide scroll-to-top button
   useEffect(() => {
-    setPage(1)
-  }, [activeTab])
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300)
-    }
-
+    const handleScroll = () => setShowScrollTop(window.scrollY > 300)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
-
-  const loadMore = () => {
-    if (page < totalPages && !loading) {
-      setPage((prev) => prev + 1)
-    }
-  }
-
-  const handleContentClick = (item: Movie | TVShow) => {
-    if (onMovieClick) {
-      const mediaItem = {
-        ...item,
-        media_type: activeTab === "movies" ? ("movie" as const) : ("tv" as const),
-        title: activeTab === "movies" ? (item as Movie).title : undefined,
-        name: activeTab === "tv" ? (item as TVShow).name : undefined,
-        release_date: activeTab === "movies" ? (item as Movie).release_date : undefined,
-        first_air_date: activeTab === "tv" ? (item as TVShow).first_air_date : undefined,
-      }
-      onMovieClick(mediaItem)
-    }
-  }
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  if (loading && page === 1) {
+  useEffect(() => {
+    setMovies([])
+    setCurrentPage(1)
+    setHasMore(true)
+    loadInitialContent()
+  }, [selectedTopic.genreIds, activeTab])
+
+  // Load first 24 items
+  const loadInitialContent = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const promises = selectedTopic.genreIds.map(async (genreId) => {
+        const [page1Data, page2Data] = await Promise.all([
+          activeTab === "movies"
+            ? tmdbApi.discoverMoviesByGenre(genreId, 1)
+            : tmdbApi.discoverTVShowsByGenre(genreId, 1),
+          activeTab === "movies"
+            ? tmdbApi.discoverMoviesByGenre(genreId, 2)
+            : tmdbApi.discoverTVShowsByGenre(genreId, 2),
+        ])
+        return [...page1Data, ...page2Data]
+      })
+
+      const results = await Promise.all(promises)
+      const allContent = results.flat()
+
+      // unique + sort
+      const uniqueContent = allContent
+        .filter((item, index, self) => index === self.findIndex((i) => i.id === item.id))
+        .sort((a, b) => b.popularity - a.popularity)
+
+      setMovies(uniqueContent.slice(0, 24))
+      setCurrentPage(2)
+      setHasMore(uniqueContent.length > 24)
+    } catch (err) {
+      setError("Failed to fetch content")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load more (24 each time)
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+
+    try {
+      const nextPage1 = currentPage + 1
+      const nextPage2 = currentPage + 2
+
+      const promises = selectedTopic.genreIds.map(async (genreId) => {
+        const [page1Data, page2Data] = await Promise.all([
+          activeTab === "movies"
+            ? tmdbApi.discoverMoviesByGenre(genreId, nextPage1)
+            : tmdbApi.discoverTVShowsByGenre(genreId, nextPage1),
+          activeTab === "movies"
+            ? tmdbApi.discoverMoviesByGenre(genreId, nextPage2)
+            : tmdbApi.discoverTVShowsByGenre(genreId, nextPage2),
+        ])
+        return [...page1Data, ...page2Data]
+      })
+
+      const results = await Promise.all(promises)
+      const newContent = results.flat()
+
+      if (newContent.length === 0) {
+        setHasMore(false)
+        return
+      }
+
+      setMovies((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id))
+        const uniqueNewContent = newContent.filter((item) => !existingIds.has(item.id))
+        return [...prev, ...uniqueNewContent.slice(0, 24)]
+      })
+
+      setCurrentPage(nextPage2)
+      setHasMore(newContent.length > 0)
+    } catch (err) {
+      console.error("Error loading more content:", err)
+      setError("Không thể tải thêm nội dung. Vui lòng thử lại.")
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  const convertToMovieFormat = (items: MediaItem[]) => {
+    return items.map((item) => {
+      const isMovie = activeTab === "movies"
+      const title = isMovie ? item.title : item.name
+      const releaseDate = item.release_date || item.first_air_date
+      const year = releaseDate ? new Date(releaseDate).getFullYear() : 2023
+
+      return {
+        ...item, // giữ lại toàn bộ dữ liệu (overview, id, backdrop_path...)
+        id: item.id,
+        title: title || "Unknown Title",
+        poster: getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200",
+        year,
+        rating: item.vote_average || 0,
+        genres: [],
+        media_type: isMovie ? "movie" : "tv",
+        backdrop_path: item.backdrop_path,
+      }
+    })
+  }
+
+  if (loading) {
     return (
-      <div className="topic-movies-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading {selectedTopic.name} content...</p>
+      <div className="topic-movies-page">
+        <div className="topic-movies-header">
+          <button className="back-button" onClick={onBack}></button>
+          <h1 className="topic-movies-title">{selectedTopic.name}</h1>
         </div>
+        <LoadingSpinner />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="topic-movies-container">
-        <div className="error-state">
-          <p>Error: {error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
+      <div className="topic-movies-page">
+        <div className="topic-movies-header">
+          <button className="back-button" onClick={onBack}></button>
+          <h1 className="topic-movies-title">{selectedTopic.name}</h1>
+        </div>
+        <div className="error-message">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button className="retry-button" onClick={loadInitialContent}>Retry</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="topic-movies-container">
-      <div className="topic-header">
+    <div className="topic-movies-page">
+      <div className="topic-movies-header">
         <button className="back-button" onClick={onBack}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M19 12H5M12 19L5 12L12 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="24"
+            viewBox="0 0 28 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="6" y1="12" x2="24" y2="12" />
+            <polyline points="14 6 6 12 14 18" />
           </svg>
-          Back to Topics
         </button>
-        <h1 className="topic-title" style={{ background: selectedTopic.background }}>
-          {selectedTopic.name}
-        </h1>
+        <h1 className="topic-movies-title">{selectedTopic.name}</h1>
+      </div>
+
+      <div className="topic-subtitle-container">
         <p className="topic-subtitle">{selectedTopic.description}</p>
       </div>
 
-      <div className="content-tabs">
+      <div className="content-tabs-topic">
         <button
-          className={`tab-button ${activeTab === "movies" ? "active" : ""}`}
+          className={`tab-button-topic ${activeTab === "movies" ? "active" : ""}`}
           onClick={() => setActiveTab("movies")}
         >
-          Movies ({movies.filter(() => activeTab === "movies").length})
+          Movies
         </button>
-        <button className={`tab-button ${activeTab === "tv" ? "active" : ""}`} onClick={() => setActiveTab("tv")}>
-          TV Shows ({movies.filter(() => activeTab === "tv").length})
+        <button
+          className={`tab-button-topic ${activeTab === "tv" ? "active" : ""}`}
+          onClick={() => setActiveTab("tv")}
+        >
+          TV Shows
         </button>
       </div>
 
-      <div className="content-grid">
-        {movies.map((item) => (
-          <div key={item.id} className="content-card" onClick={() => handleContentClick(item)}>
-            <div className="content-poster">
-              <img
-                src={getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
-                alt={activeTab === "movies" ? (item as Movie).title : (item as TVShow).name}
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg?height=300&width=200"
-                }}
-              />
-              <div className="content-overlay">
-                <button className="play-btn">▶</button>
-              </div>
-            </div>
-            <div className="content-info">
-              <h3 className="content-title">
-                {activeTab === "movies" ? (item as Movie).title : (item as TVShow).name}
-              </h3>
-              <div className="content-meta">
-                <span className="content-year">
-                  {activeTab === "movies"
-                    ? new Date((item as Movie).release_date).getFullYear()
-                    : new Date((item as TVShow).first_air_date).getFullYear()}
-                </span>
-                <span className="content-rating">⭐ {item.vote_average.toFixed(1)}</span>
-              </div>
-              <p className="content-overview">
-                {item.overview ? item.overview.substring(0, 100) + "..." : "No description available"}
-              </p>
-            </div>
+      <div className="topic-movies-content">
+        {movies.length === 0 && !loading ? (
+          <div className="no-results">
+            <p>
+              No {activeTab === "movies" ? "movies" : "TV shows"} found for {selectedTopic.name}.
+            </p>
+            <button onClick={onBack} className="back-to-topics-button">
+              Back to Topics
+            </button>
           </div>
-        ))}
+        ) : (
+          <>
+            <div className="movies-grid">
+              {convertToMovieFormat(movies).map((movie) => (
+                <MovieCard
+                  key={`${movie.id}-${movie.media_type}`}
+                  movie={movie}
+                  onMovieClick={onMovieClick}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="load-more-container">
+                <button className="load-more-button" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? (
+                    <div className="loading-spinner-small"></div>
+                  ) : (
+                    <svg
+                      width="30"
+                      height="30"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6 9L12 15L18 9"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {movies.length > 0 && page < totalPages && (
-        <div className="load-more-container">
-          <button className="load-more-btn" onClick={loadMore} disabled={loading}>
-            {loading ? (
-              <>
-                <div className="loading-spinner small"></div>
-                Loading...
-              </>
-            ) : (
-              `Load More ${activeTab === "movies" ? "Movies" : "TV Shows"}`
-            )}
-          </button>
-        </div>
-      )}
-
-      {movies.length === 0 && !loading && (
-        <div className="no-content">
-          <p>
-            No {activeTab === "movies" ? "movies" : "TV shows"} found for {selectedTopic.name}.
-          </p>
-        </div>
-      )}
 
       {showScrollTop && (
         <button className="scroll-to-top" onClick={scrollToTop}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18 15L12 9L6 15"
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            <polyline
+              points="6 12 12 6 18 12"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
       )}
     </div>
   )
 }
+
 
 export default TopicMoviesPage

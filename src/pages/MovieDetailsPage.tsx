@@ -327,19 +327,19 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
         <div className="tabs-container">
           <div className="tabs">
             <button
-              className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
+              className={`tab-button-movieDetail ${activeTab === "overview" ? "active" : ""}`}
               onClick={() => setActiveTab("overview")}
             >
               Overview
             </button>
             <button
-              className={`tab-button ${activeTab === "cast" ? "active" : ""}`}
+              className={`tab-button-movieDetail ${activeTab === "cast" ? "active" : ""}`}
               onClick={() => setActiveTab("cast")}
             >
               Cast & Crew
             </button>
             <button
-              className={`tab-button ${activeTab === "videos" ? "active" : ""}`}
+              className={`tab-button-movieDetail ${activeTab === "videos" ? "active" : ""}`}
               onClick={() => setActiveTab("videos")}
             >
               Videos & Trailers

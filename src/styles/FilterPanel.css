@@ -1,30 +1,14 @@
 .filter-panel-container {
-  background-color: #1a1a1a; /* Dark background */
-  border-radius: 8px;
+  background-color: none;
+  border-radius: 10px;
   padding: 30px;
-  margin: 40px auto;
-  max-width: 1000px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  max-width: 1300px;
+  border: 1px solid #4a4a4aa8;
   color: white;
   text-align: left;
-}
-
-.filter-panel-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30px;
-  color: #e50914; /* Netflix red */
-}
-
-.filter-panel-header svg {
-  margin-right: 15px;
-  width: 30px;
-  height: 30px;
-}
-
-.filter-panel-header h2 {
-  font-size: 2.2em;
-  margin: 0;
+  margin-top: -10px;
+  position: relative;
+  z-index: 1;
 }
 
 .filter-section {
@@ -40,48 +24,44 @@
 }
 
 .filter-section-title {
-  font-size: 1.3em;
+  font-size: 15px;
   margin-bottom: 15px;
-  color: #ccc;
-  font-weight: bold;
+  color: #fffdfdf1;
+  font-weight: 600;
 }
 
 .filter-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .filter-option-button {
-  background-color: #333;
-  color: white;
-  border: 1px solid #555;
-  padding: 8px 15px;
-  border-radius: 20px;
+  background-color: #000;
+  color: rgba(255, 255, 255, 0.871);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
-  font-size: 0.95em;
+  font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
 }
 
 .filter-option-button:hover {
-  background-color: #555;
-  border-color: #777;
-  transform: translateY(-2px);
+  color: #32fe3f;
 }
 
 .filter-option-button.selected {
-  background-color: #e50914; /* Netflix red */
-  border-color: #e50914;
-  font-weight: bold;
-  transform: scale(1.02);
+  border: 1px solid #91fd80ac;
+  color: #32fe3f;
 }
 
 .custom-year-input-container {
   position: relative;
   display: flex;
   align-items: center;
-  background-color: #333;
+  background-color: #333333a5;
   border-radius: 20px;
   padding: 0 15px;
   border: 1px solid #555;
@@ -89,16 +69,16 @@
 }
 
 .custom-year-input-container:focus-within {
-  border-color: #e50914;
+  border-color: #ffffffc9;
 }
 
 .custom-year-input {
   background: none;
   border: none;
   color: white;
-  padding: 8px 0;
-  font-size: 0.95em;
-  width: 100px;
+  padding: 10px 0;
+  font-size: 12px;
+  width: 70px;
   outline: none;
 }
 
@@ -124,7 +104,7 @@
 .close-filters-button,
 .clear-filters-button {
   padding: 12px 25px;
-  border-radius: 8px;
+  border-radius: 28px;
   font-size: 1em;
   font-weight: bold;
   cursor: pointer;
@@ -136,12 +116,12 @@
 }
 
 .apply-filters-button {
-  background-color: #e50914; /* Netflix red */
+  background-color: #09c615;
   color: white;
 }
 
 .apply-filters-button:hover {
-  background-color: #f40612;
+  background-color: #0eda14;
 }
 
 .apply-filters-button svg {
@@ -159,8 +139,8 @@
 
 .clear-filters-button {
   background-color: transparent;
-  color: #ccc;
-  border: 1px solid #555;
+  color: #e7e6e6;
+  border: 2px solid #555;
 }
 
 .clear-filters-button:hover {
@@ -168,31 +148,36 @@
   border-color: #777;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .filter-panel-container {
     padding: 20px;
     margin: 20px auto;
   }
+
   .filter-panel-header h2 {
     font-size: 1.8em;
   }
+
   .filter-section-title {
     font-size: 1.2em;
   }
+
   .filter-option-button {
     padding: 7px 12px;
     font-size: 0.9em;
   }
+
   .custom-year-input {
     width: 80px;
     font-size: 0.9em;
   }
+
   .filter-actions {
     flex-direction: column;
     gap: 10px;
     align-items: stretch;
   }
+
   .apply-filters-button,
   .close-filters-button,
   .clear-filters-button {
@@ -206,32 +191,40 @@
     padding: 15px;
     margin: 15px auto;
   }
+
   .filter-panel-header h2 {
     font-size: 1.5em;
   }
+
   .filter-panel-header svg {
     width: 24px;
     height: 24px;
     margin-right: 10px;
   }
+
   .filter-section-title {
     font-size: 1.1em;
     margin-bottom: 10px;
   }
+
   .filter-options {
     gap: 8px;
   }
+
   .filter-option-button {
     padding: 6px 10px;
     font-size: 0.85em;
   }
+
   .custom-year-input {
     width: 70px;
     font-size: 0.85em;
   }
+
   .filter-actions {
     gap: 8px;
   }
+
   .apply-filters-button,
   .close-filters-button,
   .clear-filters-button {

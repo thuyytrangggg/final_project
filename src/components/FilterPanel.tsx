@@ -12,7 +12,7 @@ interface FilterPanelProps {
 }
 
 const currentYear = new Date().getFullYear()
-const productionYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i) 
+const productionYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i) // From current year to 2010
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) => {
   const [availableGenres, setAvailableGenres] = useState<Genre[]>([])
@@ -20,11 +20,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
   const [loadingData, setLoadingData] = useState(true)
   const [errorData, setErrorData] = useState<string | null>(null)
 
+  // Filter states
   const [selectedCountries, setSelectedCountries] = useState<string[]>([])
   const [selectedContentTypes, setSelectedContentTypes] = useState<("movie" | "tv")[]>([])
   const [selectedAgeRatings, setSelectedAgeRatings] = useState<string[]>([])
   const [selectedGenres, setSelectedGenres] = useState<number[]>([])
-  const [selectedVersions, setSelectedVersions] = useState<string[]>([]) 
+  const [selectedVersions, setSelectedVersions] = useState<string[]>([]) // "Phụ đề", "Lồng tiếng"
   const [selectedProductionYears, setSelectedProductionYears] = useState<number[]>([])
   const [customProductionYear, setCustomProductionYear] = useState<string>("")
   const [selectedSortBy, setSelectedSortBy] = useState<string>("popularity.desc")
@@ -43,10 +44,43 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
         const sortedGenres = Array.from(combinedGenresMap.values()).sort((a, b) => a.name.localeCompare(b.name))
         setAvailableGenres(sortedGenres)
 
-        const filteredCountries = countries
-          .filter((country) => country.english_name && country.english_name.length > 1)
+        // Filter to show only popular countries
+        const popularCountryCodes = [
+          "US", // United States
+          "GB", // United Kingdom
+          "KR", // South Korea
+          "JP", // Japan
+          "CN", // China
+          "IN", // India
+          "FR", // France
+          "DE", // Germany
+          "IT", // Italy
+          "ES", // Spain
+          "CA", // Canada
+          "AU", // Australia
+          "BR", // Brazil
+          "MX", // Mexico
+          "RU", // Russia
+          "TH", // Thailand
+          "VN", // Vietnam
+          "ID", // Indonesia
+          "PH", // Philippines
+          "MY", // Malaysia
+          "SG", // Singapore
+          "HK", // Hong Kong
+          "TW", // Taiwan
+        ]
+
+        const popularCountries = countries
+          .filter(
+            (country) =>
+              popularCountryCodes.includes(country.iso_3166_1) &&
+              country.english_name &&
+              country.english_name.length > 1,
+          )
           .sort((a, b) => a.english_name.localeCompare(b.english_name))
-        setAvailableCountries(filteredCountries)
+
+        setAvailableCountries(popularCountries)
       } catch (err) {
         console.error("Error fetching filter data:", err)
         setErrorData("Failed to load filter options.")
@@ -64,10 +98,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
     allOption: T,
   ) => {
     if (item === allOption) {
-      setter([]) 
+      setter([]) // Select "Tất cả" means clear all others
     } else {
       setter((prev) => {
-        const newSelection = prev.filter((val) => val !== allOption) 
+        const newSelection = prev.filter((val) => val !== allOption) // Remove "Tất cả" if present
         if (newSelection.includes(item)) {
           return newSelection.filter((val) => val !== item)
         } else {
@@ -79,6 +113,21 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
 
   const handleSingleSelection = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, item: T) => {
     setter(item)
+  }
+
+  const handleSearchYear = () => {
+    if (customProductionYear && customProductionYear.trim()) {
+      const year = Number.parseInt(customProductionYear.trim())
+      if (year >= 1900 && year <= currentYear) {
+        setSelectedProductionYears([year])
+      }
+    }
+  }
+
+  const handleYearInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearchYear()
+    }
   }
 
   const handleApply = () => {
@@ -118,7 +167,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
     setter: React.Dispatch<React.SetStateAction<any[]>>,
     allOptionValue: any,
     isMultiSelect = true,
-    customInput?: { value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder: string },
+    customInput?: {
+      value: string
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+      placeholder: string
+      onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+      onSearchClick?: () => void
+    },
   ) => (
     <div className="filter-section">
       <h3 className="filter-section-title">{title}</h3>
@@ -127,7 +182,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
           className={`filter-option-button ${currentSelection.length === 0 ? "selected" : ""}`}
           onClick={() => setter([])}
         >
-          Tất cả
+          All
         </button>
         {options.map((option) => (
           <button
@@ -145,13 +200,21 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
         {customInput && (
           <div className="custom-year-input-container">
             <input
-              type="number"
+              type="text"
               value={customInput.value}
               onChange={customInput.onChange}
               placeholder={customInput.placeholder}
               className="custom-year-input"
             />
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="search-icon"
+              onClick={customInput.onSearchClick}
+            >
               <path
                 d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
                 stroke="currentColor"
@@ -197,17 +260,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
 
   return (
     <div className="filter-panel-container">
-      <div className="filter-panel-header">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 8L20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M6 12L18 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8 16L16 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <h2>Bộ lọc</h2>
-      </div>
-
       {renderFilterSection(
-        "Quốc gia:",
+        "Country:",
         availableCountries.map((c) => ({ value: c.iso_3166_1, label: c.english_name })),
         selectedCountries,
         setSelectedCountries,
@@ -215,10 +269,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
       )}
 
       {renderFilterSection(
-        "Loại phim:",
+        "Type of film:",
         [
-          { value: "movie", label: "Phim lẻ" },
-          { value: "tv", label: "Phim bộ" },
+          { value: "movie", label: "Movies" },
+          { value: "tv", label: "TV series" },
         ],
         selectedContentTypes,
         setSelectedContentTypes,
@@ -226,85 +280,62 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
       )}
 
       {renderFilterSection(
-        "Xếp hạng:",
-        [
-          { value: "P", label: "P (Mọi lứa tuổi)" },
-          { value: "K", label: "K (Dưới 13 tuổi)" },
-          { value: "T13", label: "T13 (13 tuổi trở lên)" },
-          { value: "T16", label: "T16 (16 tuổi trở lên)" },
-          { value: "T18", label: "T18 (18 tuổi trở lên)" },
-        ],
-        selectedAgeRatings,
-        setSelectedAgeRatings,
-        [], 
-      )}
-
-      {renderFilterSection(
-        "Thể loại:",
+        "Genre:",
         availableGenres.map((g) => ({ value: g.id, label: g.name })),
         selectedGenres,
         setSelectedGenres,
-        [], 
+        [], // "Tất cả" for genres is an empty array
       )}
 
       {renderFilterSection(
-        "Phiên bản:",
-        [
-          { value: "Phụ đề", label: "Phụ đề" },
-          { value: "Lồng tiếng", label: "Lồng tiếng" },
-        ],
-        selectedVersions,
-        setSelectedVersions,
-        [],
-      )}
-
-      {renderFilterSection(
-        "Năm sản xuất:",
+        "Release year:",
         productionYears.map((year) => ({ value: year, label: year.toString() })),
         selectedProductionYears,
         setSelectedProductionYears,
         [],
-        true,
+        true, // Multi-select for years
         {
           value: customProductionYear,
           onChange: (e) => setCustomProductionYear(e.target.value),
-          placeholder: "Nhập năm",
+          placeholder: "Search year",
+          onKeyPress: handleYearInputKeyPress,
+          onSearchClick: handleSearchYear,
         },
       )}
 
       <div className="filter-section">
-        <h3 className="filter-section-title">Sắp xếp:</h3>
+        <h3 className="filter-section-title">Sort by:</h3>
         <div className="filter-options">
           <button
             className={`filter-option-button ${selectedSortBy === "popularity.desc" ? "selected" : ""}`}
             onClick={() => setSelectedSortBy("popularity.desc")}
           >
-            Mới nhất
+            Newest
           </button>
           <button
             className={`filter-option-button ${selectedSortBy === "primary_release_date.desc" ? "selected" : ""}`}
             onClick={() => setSelectedSortBy("primary_release_date.desc")}
           >
-            Mới cập nhật
+            Recently Updated
           </button>
           <button
             className={`filter-option-button ${selectedSortBy === "vote_average.desc" ? "selected" : ""}`}
             onClick={() => setSelectedSortBy("vote_average.desc")}
           >
-            Điểm IMDb
+            IMDb Rating
           </button>
           <button
             className={`filter-option-button ${selectedSortBy === "vote_count.desc" ? "selected" : ""}`}
             onClick={() => setSelectedSortBy("vote_count.desc")}
           >
-            Lượt xem
+            Most Viewed
           </button>
         </div>
       </div>
 
       <div className="filter-actions">
         <button className="apply-filters-button" onClick={handleApply}>
-          Lọc kết quả
+          Apply Filters
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <path
@@ -317,10 +348,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onApplyFilters, onClose }) =>
           </svg>
         </button>
         <button className="close-filters-button" onClick={onClose}>
-          Đóng
+          Close
         </button>
         <button className="clear-filters-button" onClick={handleClearFilters}>
-          Xóa bộ lọc
+          Clear Filters
         </button>
       </div>
     </div>

@@ -4,29 +4,34 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { tmdbApi } from "../services/tmdbApi"
 import { getImageUrl } from "../config/api"
+import MovieCard from "../components/MovieCard"
+import LoadingSpinner from "../components/LoadingSpinner"
 import type { MediaItem } from "../types/mediaTypes"
 import "./SearchResultsPage.css"
 
 interface SearchResultsPageProps {
   searchQuery: string
   onBack: () => void
-  onMovieClick: (item: MediaItem) => void
+  onMovieClick: (movie: MediaItem) => void
 }
 
 const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ searchQuery, onBack, onMovieClick }) => {
   const [results, setResults] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [activeFilter, setActiveFilter] = useState<"all" | "movie" | "tv">("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [searchQuery])
 
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300)
     }
-
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -35,71 +40,99 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ searchQuery, onBa
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  const fetchSearchResults = async (pageNum: number) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const [res1, res2] = await Promise.all([
+        tmdbApi.searchMulti(searchQuery, pageNum),
+        tmdbApi.searchMulti(searchQuery, pageNum + 1),
+      ])
+
+      const combined = [...res1, ...res2]
+
+      const uniqueResults = combined.filter(
+        (item, index, self) => index === self.findIndex((m) => m.id === item.id)
+      )
+
+      return uniqueResults.slice(0, 24)
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const loadInitialResults = async () => {
+    try {
+      setResults([])
+      setCurrentPage(1)
+      setHasMore(true)
+
+      const firstResults = await fetchSearchResults(1)
+
+      setResults(firstResults)
+      setCurrentPage(2) 
+      setHasMore(firstResults.length === 24)
+    } catch (err) {
+      setError("Failed to search")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    const fetchResults = async () => {
-      if (!searchQuery.trim()) return
+    if (searchQuery.trim()) {
+      loadInitialResults()
+    }
+  }, [searchQuery])
 
-      try {
-        setLoading(true)
-        setError(null)
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return
+    try {
+      setLoadingMore(true)
+      const newResults = await fetchSearchResults(currentPage + 1)
 
-        let response: MediaItem[] = []
-
-        if (activeFilter === "all") {
-          response = await tmdbApi.searchMulti(searchQuery, page)
-        } else if (activeFilter === "movie") {
-          const movieResults = await tmdbApi.searchMovies(searchQuery, page)
-          response = movieResults.map((movie) => ({ ...movie, media_type: "movie" as const }))
-        } else {
-          const tvResults = await tmdbApi.searchTVShows(searchQuery, page)
-          response = tvResults.map((tv) => ({ ...tv, media_type: "tv" as const }))
-        }
-
-        if (page === 1) {
-          setResults(response)
-        } else {
-          setResults((prev) => [...prev, ...response])
-        }
-
-        // Estimate total pages
-        setTotalPages(Math.min(20, Math.ceil(response.length > 0 ? 500 / 20 : 1)))
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to search")
-        console.error("Error searching:", err)
-      } finally {
-        setLoading(false)
+      if (newResults.length > 0) {
+        setResults((prev) => [...prev, ...newResults])
+        setCurrentPage((prev) => prev + 2) // tăng thêm 2 page
+      } else {
+        setHasMore(false)
       }
-    }
-
-    fetchResults()
-  }, [searchQuery, activeFilter, page])
-
-  useEffect(() => {
-    // Reset page when switching filters
-    setPage(1)
-  }, [activeFilter])
-
-  const loadMore = () => {
-    if (page < totalPages && !loading) {
-      setPage((prev) => prev + 1)
+    } catch (err) {
+      console.error("Failed to load more:", err)
+    } finally {
+      setLoadingMore(false)
     }
   }
 
-  const handleFilterChange = (filter: "all" | "movie" | "tv") => {
-    setActiveFilter(filter)
-    setPage(1)
+  const convertToMovieFormat = (items: MediaItem[]) => {
+    return items.map((item) => {
+      const isMovie = item.media_type === "movie" || (!item.media_type && item.title)
+      const isTVShow = item.media_type === "tv" || (!item.media_type && item.name)
+
+      let title = item.title || item.name || item.original_title || item.original_name || "Unknown Title"
+      const releaseDate = item.release_date || item.first_air_date
+      const year = releaseDate ? new Date(releaseDate).getFullYear() : "N/A"
+
+      return {
+        id: item.id,
+        title: title,
+        poster: getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200",
+        year: year,
+        rating: item.vote_average || 0,
+        genres: [],
+        media_type: item.media_type || (isMovie ? "movie" : "tv"),
+        backdrop_path: item.backdrop_path,
+      }
+    })
   }
 
-  const filteredResults = results.filter((item) => {
-    if (activeFilter === "all") return true
-    return item.media_type === activeFilter
-  })
-
-  if (loading && page === 1) {
+  if (loading && results.length === 0) {
     return (
-      <div className="search-results-container">
+      <div className="search-page">
         <div className="loading-state">
-          <div className="loading-spinner"></div>
+          <LoadingSpinner />
           <p>Searching for "{searchQuery}"...</p>
         </div>
       </div>
@@ -108,10 +141,13 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ searchQuery, onBa
 
   if (error) {
     return (
-      <div className="search-results-container">
-        <div className="error-state">
-          <p>Error: {error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
+      <div className="search-page">
+        <div className="error-message">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button className="retry-button" onClick={loadInitialResults}>
+            Retry
+          </button>
         </div>
       </div>
     )
@@ -119,122 +155,49 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ searchQuery, onBa
 
   return (
     <div className="search-results-container">
-      <div className="search-header">
-        <h1 className="search-title">Search Results</h1>
-        <p className="search-subtitle">
-          Found {filteredResults.length} results for "{searchQuery}"
-        </p>
-      </div>
-
-      <div className="filter-tabs">
-        <button
-          className={`filter-tab ${activeFilter === "all" ? "active" : ""}`}
-          onClick={() => handleFilterChange("all")}
-        >
-          All ({results.length})
-        </button>
-        <button
-          className={`filter-tab ${activeFilter === "movie" ? "active" : ""}`}
-          onClick={() => handleFilterChange("movie")}
-        >
-          Movies ({results.filter((r) => r.media_type === "movie").length})
-        </button>
-        <button
-          className={`filter-tab ${activeFilter === "tv" ? "active" : ""}`}
-          onClick={() => handleFilterChange("tv")}
-        >
-          TV Shows ({results.filter((r) => r.media_type === "tv").length})
-        </button>
-      </div>
-
-      {filteredResults.length > 0 ? (
-        <>
-          <div className="search-results-grid">
-            {filteredResults.map((item) => (
-              <div key={item.id} className="search-result-card" onClick={() => onMovieClick(item)}>
-                <div className="result-poster">
-                  <img
-                    src={getImageUrl(item.poster_path, "w500") || "/placeholder.svg?height=300&width=200"}
-                    alt={item.title || item.name}
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.svg?height=300&width=200"
-                    }}
-                  />
-                  <div className="result-overlay">
-                    <button className="play-btn">▶</button>
-                  </div>
-                  <div className="media-type-badge">{item.media_type === "movie" ? "Movie" : "TV Show"}</div>
-                </div>
-                <div className="result-info">
-                  <h3 className="result-title">{item.title || item.name}</h3>
-                  <div className="result-meta">
-                    <span className="result-year">
-                      {item.release_date
-                        ? new Date(item.release_date).getFullYear()
-                        : item.first_air_date
-                          ? new Date(item.first_air_date).getFullYear()
-                          : "N/A"}
-                    </span>
-                    <span className="result-rating">⭐ {item.vote_average?.toFixed(1) || "N/A"}</span>
-                  </div>
-                  <p className="result-overview">
-                    {item.overview ? item.overview.substring(0, 120) + "..." : "No description available"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredResults.length > 0 && page < totalPages && (
-            <div className="load-more-container">
-              <button className="load-more-btn" onClick={loadMore} disabled={loading}>
-                {loading ? (
-                  <>
-                    <div className="loading-spinner small"></div>
-                    Loading...
-                  </>
-                ) : (
-                  "Load More Results"
-                )}
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="no-results">
-          <div className="no-results-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <h3>No results found</h3>
-          <p>Try searching with different keywords or check your spelling.</p>
-          <div className="search-suggestions">
-            <p>Suggestions:</p>
-            <ul>
-              <li>Use more general terms</li>
-              <li>Check spelling and try again</li>
-              <li>Try searching for actors or directors</li>
-            </ul>
-          </div>
+      <div className="search-content">
+        <div className="search-results-grid">
+          {convertToMovieFormat(results).map((movie) => (
+            <MovieCard key={`${movie.id}-${movie.media_type}`} movie={movie} onMovieClick={onMovieClick} />
+          ))}
         </div>
-      )}
+
+        {hasMore && (
+          <div className="load-more-container">
+            <button className="load-more-button" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? <div className="loading-spinner-small"></div> : 
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M6 9L12 15L18 9"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>}
+            </button>
+          </div>
+        )}
+
+        {!hasMore && results.length > 0 && (
+          <div className="end-message">
+            <p>You've reached the end of the results</p>
+          </div>
+        )}
+      </div>
+
       {showScrollTop && (
         <button className="scroll-to-top" onClick={scrollToTop}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18 15L12 9L6 15"
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            <polyline
+              points="6 12 12 6 18 12"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
       )}

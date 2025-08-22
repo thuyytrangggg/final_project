@@ -205,15 +205,15 @@ const ActorDetailsPage: React.FC<ActorDetailsPageProps> = ({ actorId, onBack, on
       <div className="actor-content">
         <div className="content-tabs">
           <button
-            className={`tab-button ${activeTab === "movies" ? "active" : ""}`}
+            className={`tab-button-actorDetail ${activeTab === "movies" ? "active" : ""}`}
             onClick={() => setActiveTab("movies")}
           >
             Movies ({movies.length})
           </button>
-          <button className={`tab-button ${activeTab === "tv" ? "active" : ""}`} onClick={() => setActiveTab("tv")}>
+          <button className={`tab-button-actorDetail ${activeTab === "tv" ? "active" : ""}`} onClick={() => setActiveTab("tv")}>
             TV Shows ({tvShows.length})
           </button>
-          <button className={`tab-button ${activeTab === "bio" ? "active" : ""}`} onClick={() => setActiveTab("bio")}>
+          <button className={`tab-button-actorDetail ${activeTab === "bio" ? "active" : ""}`} onClick={() => setActiveTab("bio")}>
             Biography
           </button>
         </div>

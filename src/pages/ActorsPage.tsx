@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -19,7 +20,12 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
   const [activeCategory, setActiveCategory] = useState<"popular" | "trending_week" | "trending_day">("popular")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [searchInput, setSearchInput] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Actor[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchDebounceTimer, setSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
 
@@ -28,6 +34,37 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
     { key: "trending_week", label: "Trending This Week", description: "Trending actors this week" },
     { key: "trending_day", label: "Trending Today", description: "Trending actors today" },
   ] as const
+
+  useEffect(() => {
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer)
+    }
+
+    if (searchInput.trim().length > 0) {
+      const timer = setTimeout(async () => {
+        try {
+          setSearchLoading(true)
+          const results = await tmdbApi.searchActors(searchInput.trim(), 1)
+          setSearchResults(results.slice(0, 8)) // Limit dropdown results
+        } catch (err) {
+          console.error("Search error:", err)
+          setSearchResults([])
+        } finally {
+          setSearchLoading(false)
+        }
+      }, 300) // 300ms debounce
+
+      setSearchDebounceTimer(timer)
+    } else {
+      setSearchResults([])
+    }
+
+    return () => {
+      if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer)
+      }
+    }
+  }, [searchInput])
 
   useEffect(() => {
     const fetchActors = async () => {
@@ -59,6 +96,7 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
           setActors((prev) => [...prev, ...response])
         }
 
+        // Estimate total pages
         setTotalPages(Math.min(20, Math.ceil(response.length > 0 ? 500 / 20 : 1)))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch actors")
@@ -72,19 +110,53 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
   }, [activeCategory, page, searchQuery, isSearching])
 
   useEffect(() => {
+    // Reset page when switching categories or searching
     setPage(1)
   }, [activeCategory, searchQuery])
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setIsSearching(query.trim().length > 0)
-    setPage(1)
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  const handleSearchFocus = () => {
+    if (searchInput.trim().length > 0) {
+      setShowSearchResults(true)
+    }
+  }
+
+  const handleSearchBlur = () => {
+    setTimeout(() => setShowSearchResults(false), 200)
+  }
+
+  const handleSearchSubmit = () => {
+    if (searchInput.trim()) {
+      setSearchQuery(searchInput.trim())
+      setIsSearching(true)
+      setShowSearchResults(false)
+      setPage(1)
+    }
+  }
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit()
+    }
+  }
+
+  const handleSearchResultClick = (actor: Actor) => {
+    handleActorClick(actor)
+    setShowSearchResults(false)
+    setSearchInput("")
+    setSearchQuery("")
+    setIsSearching(false)
   }
 
   const clearSearch = () => {
+    setSearchInput("")
     setSearchQuery("")
     setIsSearching(false)
     setPage(1)
+    setShowSearchResults(false)
   }
 
   const loadMore = () => {
@@ -140,20 +212,22 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
   return (
     <div className="actors-page-container">
       <div className="actors-header">
-        <h1 className="actors-title">Actors & Actresses</h1>
-        <p className="actors-subtitle">Discover talented actors and actresses from around the world</p>
+        <h1 className="actors-title">Actors</h1>
       </div>
 
       <div className="search-section">
-        <div className="search-container">
+        <div className="search-container-actor">
           <input
             type="text"
             placeholder="Search for actors..."
             className="search-input-actor"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => handleSearchInputChange(e.target.value)}
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            onKeyPress={handleSearchKeyPress}
           />
-          <button className="search-btn-actor">
+          <button className="search-btn-actor" onClick={handleSearchSubmit}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
@@ -164,7 +238,7 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
               />
             </svg>
           </button>
-          {searchQuery && (
+          {(searchInput || isSearching) && (
             <button className="clear-search-btn-actor" onClick={clearSearch}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -176,6 +250,35 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
                 />
               </svg>
             </button>
+          )}
+
+          {showSearchResults && searchInput.length > 0 && (
+            <div className="search-results-dropdown">
+              {searchLoading && <div className="search-loading">Searching...</div>}
+              {!searchLoading && searchResults.length === 0 && searchInput.length > 0 && (
+                <div className="search-no-results">No actors found</div>
+              )}
+              {!searchLoading && searchResults.length > 0 && (
+                <div className="search-items">
+                  {searchResults.map((actor) => (
+                    <div key={actor.id} className="search-item" onClick={() => handleSearchResultClick(actor)}>
+                      <img
+                        src={getImageUrl(actor.profile_path, "w185") || "/placeholder.svg?height=60&width=45"}
+                        alt={actor.name}
+                        className="search-item-poster"
+                      />
+                      <div className="search-item-info">
+                        <h4>{actor.name}</h4>
+                        <p>
+                          {actor.known_for_department} • ★ {actor.popularity.toFixed(1)}
+                        </p>
+                        <span className="media-type">Actor</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -196,13 +299,9 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
       )}
 
       <div className="current-category-info">
-        <h2 className="category-title">
+        {/* <h2 className="category-title-actor">
           {isSearching ? `Search Results for "${searchQuery}"` : currentCategory?.label}
-        </h2>
-        <p className="category-subtitle">
-          {isSearching ? `Found ${actors.length} actors` : currentCategory?.description}
-        </p>
-        <span className="actors-count">({actors.length} actors)</span>
+        </h2> */}
       </div>
 
       <div className="actors-grid">
@@ -224,8 +323,8 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
               </div>
             </div>
             <div className="actor-info">
-              <h3 className="actor-name">{actor.name}</h3>
-              <p className="actor-department">{actor.known_for_department}</p>
+              <h3 className="actors-name">{actor.name}</h3>
+              {/* <p className="actor-department">{actor.known_for_department}</p> */}
               <div className="actor-known-for">
                 {actor.known_for?.slice(0, 2).map((item, index) => (
                   <span key={index} className="known-for-item">
@@ -240,14 +339,21 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
 
       {actors.length > 0 && page < totalPages && (
         <div className="load-more-container">
-          <button className="load-more-btn" onClick={loadMore} disabled={loading}>
+          <button className="load-more-btn-actor" onClick={loadMore} disabled={loading}>
             {loading ? (
               <>
                 <div className="loading-spinner small"></div>
-                Loading...
               </>
             ) : (
-              "Load More Actors"
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M6 9L12 15L18 9"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
             )}
           </button>
         </div>
@@ -260,14 +366,19 @@ const ActorsPage: React.FC<ActorsPageProps> = ({ onBack, onActorClick }) => {
       )}
       {showScrollTop && (
         <button className="scroll-to-top" onClick={scrollToTop}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18 15L12 9L6 15"
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Thân mũi tên */}
+            <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            {/* Đầu mũi tên */}
+            <polyline
+              points="6 12 12 6 18 12"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {/* Đường kẻ ngang*/}
+            <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
       )}

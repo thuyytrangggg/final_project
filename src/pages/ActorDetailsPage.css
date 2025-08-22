@@ -136,7 +136,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.tab-button {
+.tab-button-actorDetail {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.7);
@@ -149,12 +149,12 @@
   position: relative;
 }
 
-.tab-button:hover {
+.tab-button-actorDetail:hover {
   color: white;
   background: rgba(255, 255, 255, 0.05);
 }
 
-.tab-button.active {
+.tab-button-actorDetail.active {
   color: #ff6b35;
   border-bottom-color: #ff6b35;
   background: rgba(255, 107, 53, 0.1);

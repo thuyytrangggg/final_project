@@ -1,5 +1,17 @@
 .movie-section {
   margin-bottom: 50px;
+  position: relative;
+  overflow: visible;
+}
+
+.movie-section-container {
+  position: relative;
+  overflow: visible;
+}
+
+.movie-grid-wrapper {
+  position: relative;
+  overflow: visible;
 }
 
 .section-header {
@@ -17,14 +29,15 @@
 .view-all {
   background: none;
   border: none;
-  color: #e50914;
-  font-size: 14px;
+  color: #0d941d;
+  font-size: 16px;
   cursor: pointer;
   transition: color 0.3s;
 }
 
 .view-all:hover {
-  color: #f40612;
+  color: #15f72f;
+  transform: scale(1.2);
 }
 
 .movies-container {
@@ -50,7 +63,6 @@
   cursor: pointer;
   transition: all 0.3s ease;
   position: absolute;
-  /* Căn giữa theo chiều cao của movie card (320px / 2 = 160px) */
   top: 160px;
   transform: translateY(-50%);
   z-index: 5;
@@ -73,10 +85,40 @@
   right: -50px;
 }
 
+.movie-grid {
+  display: flex;
+  gap: 15px;
+  padding: 0 20px;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+
+.movie-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.movie-grid .movie-card {
+  transition: none !important;
+}
+
+.movie-grid .movie-card:hover {
+  transform: none !important;
+}
+
+.movie-grid .movie-card .movie-poster img {
+  transition: none !important;
+}
+
+.movie-grid .movie-card .movie-poster img:hover {
+  transform: none !important;
+}
+
 .movies-grid.single-row {
   display: flex;
   gap: 15px;
-  overflow-x: auto;
   padding-bottom: 10px;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -88,14 +130,8 @@
   display: none;
 }
 
-.movies-grid.multi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  max-width: 100%;
-}
 
-/* Bỏ tất cả hover effects cho movie cards trong sections */
+
 .movies-grid .movie-card {
   transition: none !important;
 }
@@ -114,14 +150,12 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  /* Điều chỉnh vị trí arrow cho movie card nhỏ hơn (270px / 2 = 135px) */
   .nav-arrow {
     top: 135px;
   }
 }
 
 @media (max-width: 992px) {
-  /* Điều chỉnh cho movie card 240px / 2 = 120px */
   .nav-arrow {
     top: 120px;
   }
@@ -139,7 +173,6 @@
   .nav-arrow {
     width: 35px;
     height: 35px;
-    /* Điều chỉnh cho movie card 210px / 2 = 105px */
     top: 105px;
   }
 
@@ -162,7 +195,6 @@
     width: 30px;
     height: 30px;
     opacity: 1;
-    /* Điều chỉnh cho movie card 180px / 2 = 90px */
     top: 90px;
   }
 

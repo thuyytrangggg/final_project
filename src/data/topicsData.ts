@@ -70,11 +70,11 @@ export const topicsData: TopicData[] = [
     genreIds: [28, 12, 878, 14, 53], // Action, Adventure, Science Fiction, Fantasy, Thriller (high budget films)
     description: "Big budget blockbuster movies",
   },
-  {
-    id: 10,
-    name: "Classic",
-    background: "linear-gradient(135deg, #CD853F, #D2691E)",
-    genreIds: [18, 10749, 35, 9648, 36], // Drama, Romance, Comedy, Mystery, History (classic films)
-    description: "Timeless classics and award winners",
-  },
+  // {
+  //   id: 10,
+  //   name: "Classic",
+  //   background: "linear-gradient(135deg, #CD853F, #D2691E)",
+  //   genreIds: [18, 10749, 35, 9648, 36], 
+  //   description: "Timeless classics and award winners",
+  // },
 ]

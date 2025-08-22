@@ -2,105 +2,116 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import MovieCard from "./MovieCard"
 import "../styles/MovieSection.css"
 
 interface MovieSectionProps {
   title: string
-  movies: {
-    id: number
-    title: string
-    poster: string
-    year: number
-    rating: number
-    genres: string[]
-  }[]
-  showViewAll?: boolean
+  movies: any[]
   rows?: number
-  onMovieClick?: (movieData: any) => void
+  onMovieClick: (movie: any) => void
+  onViewAllClick?: (category: string) => void
+  category?: string
 }
 
-const MovieSection: React.FC<MovieSectionProps> = ({ title, movies, showViewAll = true, rows = 1, onMovieClick }) => {
+const MovieSection: React.FC<MovieSectionProps> = ({
+  title,
+  movies,
+  rows = 1,
+  onMovieClick,
+  onViewAllClick,
+  category,
+}) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const scroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = scrollContainerRef.current.clientWidth
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      })
-
-      setTimeout(() => {
-        checkScrollability()
-      }, 600)
-    }
-  }
+  // Limit to 6 movies as requested
+  const limitedMovies = movies.slice(0, 6)
 
   const checkScrollability = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
+    const container = scrollContainerRef.current
+    if (!container) return
 
-      setCanScrollLeft(scrollLeft > 5)
-
-      const maxScrollLeft = scrollWidth - clientWidth
-      setCanScrollRight(scrollLeft < maxScrollLeft - 5)
-    }
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setCanScrollLeft(scrollLeft > 0)
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5) // 5px tolerance
   }
 
   useEffect(() => {
     checkScrollability()
-  }, [movies])
 
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current
-    if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", checkScrollability)
-      window.addEventListener("resize", checkScrollability)
+    const container = scrollContainerRef.current
+    if (!container) return
 
-      return () => {
-        scrollContainer.removeEventListener("scroll", checkScrollability)
-        window.removeEventListener("resize", checkScrollability)
-      }
+    const handleScroll = () => {
+      // Use setTimeout to check after scroll animation completes
+      setTimeout(checkScrollability, 100)
     }
-  }, [])
 
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current
-    if (scrollContainer) {
-      scrollContainer.addEventListener("scrollend", checkScrollability)
-      return () => {
-        scrollContainer.removeEventListener("scrollend", checkScrollability)
-      }
+    const handleResize = () => {
+      checkScrollability()
     }
-  }, [])
+
+    container.addEventListener("scroll", handleScroll)
+    window.addEventListener("resize", handleResize)
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [limitedMovies])
+
+  const scroll = (direction: "left" | "right") => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const scrollAmount = container.clientWidth * 0.8
+    const targetScrollLeft =
+      direction === "left" ? container.scrollLeft - scrollAmount : container.scrollLeft + scrollAmount
+
+    container.scrollTo({
+      left: targetScrollLeft,
+      behavior: "smooth",
+    })
+  }
+
+  const handleViewAllClick = () => {
+    if (onViewAllClick && category) {
+      onViewAllClick(category)
+    }
+  }
 
   return (
     <div className="movie-section">
       <div className="section-header">
         <h2 className="section-title">{title}</h2>
-        {showViewAll && <button className="view-all">View all</button>}
+        {onViewAllClick && category && (
+          <button className="view-all" onClick={handleViewAllClick}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="40"
+              height="24"
+              viewBox="0 0 28 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="4" y1="12" x2="22" y2="12" />
+              <polyline points="14 6 22 12 14 18" />
+            </svg>
+          </button>
+        )}
       </div>
-      <div className="movies-container" style={{ "--rows": rows } as React.CSSProperties}>
-        <div className="movies-wrapper">
-          {canScrollLeft && (
-            <button className="nav-arrow left-arrow" onClick={() => scroll("left")}>
-              <ChevronLeft strokeWidth={3} />
-            </button>
-          )}
-          <div className={`movies-grid ${rows > 1 ? "multi-row" : "single-row"}`} ref={scrollContainerRef}>
-            {movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
-            ))}
-          </div>
-          {canScrollRight && (
-            <button className="nav-arrow right-arrow" onClick={() => scroll("right")}>
-              <ChevronRight strokeWidth={3} />
-            </button>
-          )}
+
+      <div className="movie-container">
+
+        <div className={`movies-grid ${rows > 1 ? "multi-row" : "single-row"}`} ref={scrollContainerRef}>
+           {limitedMovies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
+        ))}
         </div>
       </div>
     </div>

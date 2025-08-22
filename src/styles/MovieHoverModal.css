@@ -2,9 +2,9 @@
   width: 100%;
   height: 100%;
   background: #181818;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -26,15 +26,12 @@
 
 .modal-backdrop {
   width: 100%;
-  height: 60%;
+  height: 55%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-color: #333;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .modal-backdrop-overlay {
@@ -44,20 +41,21 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.8) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .modal-action-buttons {
   display: flex;
-  gap: 16px;
+  flex-direction: row;
+  gap: 8px;
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
   z-index: 2;
 }
 
 .modal-play-button {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #00c851;
   border: none;
@@ -77,14 +75,14 @@
 }
 
 .modal-play-button svg {
-  width: 22px;
-  height: 22px;
-  margin-left: 3px;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
 }
 
 .modal-favorite-button {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.8);
@@ -104,34 +102,34 @@
 }
 
 .modal-favorite-button svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .modal-free-badge {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   background: #00c851;
   color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: bold;
   z-index: 3;
 }
 
 .modal-content {
   flex: 1;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background: #181818;
 }
 
 .modal-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: white;
   margin: 0;
@@ -145,61 +143,61 @@
 .modal-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .modal-rating {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: #ffc107;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .modal-rating svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .modal-age-rating {
   background: #666;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 10px;
   font-weight: 700;
 }
 
 .modal-year {
   color: #ccc;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .modal-genres {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .modal-genre-tag {
   background: rgba(255, 255, 255, 0.1);
   color: #ccc;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
   font-weight: 500;
 }
 
 .modal-overview {
   color: #ccc;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -211,14 +209,14 @@
   align-items: center;
   justify-content: center;
   background: #181818;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
 .loading-spinner-small {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #333;
-  border-top: 3px solid #00c851;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #333;
+  border-top: 2px solid #00c851;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -235,81 +233,7 @@
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .modal-title {
-    font-size: 18px;
-  }
-
-  .modal-overview {
-    font-size: 13px;
-    -webkit-line-clamp: 4;
-  }
-
-  .modal-content {
-    padding: 18px;
-    gap: 14px;
-  }
-
-  .modal-play-button,
-  .modal-favorite-button {
-    width: 45px;
-    height: 45px;
-  }
-
-  .modal-play-button svg,
-  .modal-favorite-button svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .modal-free-badge {
-    font-size: 12px;
-    padding: 5px 10px;
-  }
-}
-
-@media (max-width: 992px) {
-  .modal-title {
     font-size: 16px;
-  }
-
-  .modal-overview {
-    font-size: 12px;
-    -webkit-line-clamp: 4;
-  }
-
-  .modal-content {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .modal-play-button,
-  .modal-favorite-button {
-    width: 40px;
-    height: 40px;
-  }
-
-  .modal-play-button svg,
-  .modal-favorite-button svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .modal-free-badge {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .modal-rating {
-    font-size: 14px;
-  }
-
-  .modal-year {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
-  .modal-title {
-    font-size: 15px;
   }
 
   .modal-overview {
@@ -334,25 +258,117 @@
     height: 16px;
   }
 
-  .modal-genre-tag {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .modal-meta {
-    gap: 12px;
-  }
-
-  .modal-rating {
-    font-size: 13px;
-  }
-
-  .modal-year {
-    font-size: 13px;
-  }
-
   .modal-free-badge {
     font-size: 10px;
     padding: 3px 6px;
+  }
+
+  .modal-action-buttons {
+    bottom: 14px;
+    left: 14px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 992px) {
+  .modal-title {
+    font-size: 15px;
+  }
+
+  .modal-overview {
+    font-size: 10px;
+    -webkit-line-clamp: 3;
+  }
+
+  .modal-content {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .modal-play-button,
+  .modal-favorite-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .modal-play-button svg,
+  .modal-favorite-button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .modal-free-badge {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .modal-rating {
+    font-size: 12px;
+  }
+
+  .modal-year {
+    font-size: 12px;
+  }
+
+  .modal-action-buttons {
+    bottom: 12px;
+    left: 12px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-title {
+    font-size: 14px;
+  }
+
+  .modal-overview {
+    font-size: 9px;
+    -webkit-line-clamp: 2;
+  }
+
+  .modal-content {
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .modal-play-button,
+  .modal-favorite-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .modal-play-button svg,
+  .modal-favorite-button svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .modal-genre-tag {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .modal-meta {
+    gap: 8px;
+  }
+
+  .modal-rating {
+    font-size: 11px;
+  }
+
+  .modal-year {
+    font-size: 11px;
+  }
+
+  .modal-free-badge {
+    font-size: 8px;
+    padding: 2px 4px;
+  }
+
+  .modal-action-buttons {
+    bottom: 10px;
+    left: 10px;
+    gap: 4px;
   }
 }
