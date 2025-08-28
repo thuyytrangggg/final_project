@@ -137,20 +137,25 @@ const ActorDetailsPage: React.FC<ActorDetailsPageProps> = ({ actorId, onBack, on
 
   return (
     <div className="actor-details-container">
+
+      <button className="back-button-actor-detail" onClick={onBack}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="24"
+            viewBox="0 0 28 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="6" y1="12" x2="24" y2="12" />
+            <polyline points="14 6 6 12 14 18" />
+          </svg>
+        </button>
       {/* Hero Section */}
       <div className="actor-hero">
-        <button className="back-button" onClick={onBack}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M19 12H5M12 19L5 12L12 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </button>
 
         <div className="actor-hero-content">
           <div className="actor-photo-section">
@@ -341,14 +346,19 @@ const ActorDetailsPage: React.FC<ActorDetailsPageProps> = ({ actorId, onBack, on
 
       {showScrollTop && (
         <button className="scroll-to-top" onClick={scrollToTop}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M18 15L12 9L6 15"
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Thân mũi tên */}
+            <line x1="12" y1="20" x2="12" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            {/* Đầu mũi tên */}
+            <polyline
+              points="6 12 12 6 18 12"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {/* Đường kẻ ngang*/}
+            <line x1="6" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </button>
       )}

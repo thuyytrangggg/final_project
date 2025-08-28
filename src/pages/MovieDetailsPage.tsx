@@ -11,9 +11,10 @@ interface MovieDetailsPageProps {
   mediaItem: MediaItem
   onBack: () => void
   onActorClick?: (actorId: number) => void
+  onWatchClick?: (mediaItem: MediaItem) => void
 }
 
-const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, onActorClick }) => {
+const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, onActorClick, onWatchClick }) => {
   const [details, setDetails] = useState<MovieDetails | TVShow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +55,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
     }
 
     fetchDetails()
-  }, [mediaItem]) 
+  }, [mediaItem])
 
   const handleActorClick = (actor: Cast) => {
     if (onActorClick) {
@@ -114,7 +115,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
           }}
         />
         <div className="movie-actions">
-          <button className="watch-button">
+          <button className="watch-button" onClick={() => onWatchClick?.(mediaItem)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
             </svg>
@@ -128,7 +129,7 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
           </button>
         </div>
       </div>
-      <div className="movie-info-section">
+      <div className="movie-info-section-detail">
         <div className="movie-metadata">
           <div className="metadata-row">
             <span className="metadata-label">Release Date:</span>
@@ -283,20 +284,26 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
           backgroundImage: `url(${backdropUrl})`,
         }}
       >
-        <div className="hero-overlay"></div>
-        <div className="hero-content">
-          <button className="back-button" onClick={onBack}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M19 12H5M12 19L5 12L12 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+        <div className="hero-overlay">
+          <button className="back-button-movie-detail" onClick={onBack}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="40"
+              height="24"
+              viewBox="0 0 28 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="6" y1="12" x2="24" y2="12" />
+              <polyline points="14 6 6 12 14 18" />
             </svg>
-            Back
+
           </button>
+        </div>
+        {/* <div className="hero-content">
           <div className="hero-info">
             <h1 className="hero-title">{title}</h1>
             <div className="hero-metadata">
@@ -308,18 +315,12 @@ const MovieDetailsPage: React.FC<MovieDetailsPageProps> = ({ mediaItem, onBack, 
               {details && "runtime" in details && details.runtime && (
                 <span className="runtime">⏱ {formatRuntime(details.runtime)}</span>
               )}
-              {/* {details &&
-                "episode_run_time" in details &&
-                details.episode_run_time &&
-                details.episode_run_time.length > 0 && (
-                  <span className="runtime">⏱ {formatRuntime(details.episode_run_time[0])} / episode</span>
-                )} */}
             </div>
             <p className="hero-overview">
               {(details?.overview || mediaItem.overview)?.substring(0, 200) + "..." || "No overview available."}
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Content Section */}

@@ -411,7 +411,7 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack, onMovieClick }) => {
   return (
     <div className="category-page">
       <div className="category-header">
-        <button className="back-button" onClick={onBack}>
+        {/* <button className="back-button" onClick={onBack}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="40"
@@ -426,7 +426,7 @@ const SeriesPage: React.FC<SeriesPageProps> = ({ onBack, onMovieClick }) => {
             <line x1="6" y1="12" x2="24" y2="12" />
             <polyline points="14 6 6 12 14 18" />
           </svg>
-        </button>
+        </button> */}
         <h1 className="category-title">TV Series</h1>
       </div>
 

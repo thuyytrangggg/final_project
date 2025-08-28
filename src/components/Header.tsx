@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useSearch } from "../hooks/useSearch"
@@ -25,6 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
   const [showGenreModal, setShowGenreModal] = useState(false)
   const [showCountryModal, setShowCountryModal] = useState(false)
   const [searchInput, setSearchInput] = useState("")
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   const handleSearchFocus = () => {
     setShowResults(true)
@@ -36,11 +39,16 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
   const handleResultClick = (item: MediaItem) => {
     console.log("Selected:", item)
-    onNavigate("movie-details", { mediaItem: item })
+    if (item.media_type === "person") {
+      onNavigate("actor-details", { actorId: item.id })
+      setActiveNav("actor")
+    } else {
+      onNavigate("movie-details", { mediaItem: item })
+      setActiveNav("movie-details")
+    }
     setShowResults(false)
     setQuery("")
     setSearchInput("")
-    setActiveNav("movie-details")
   }
 
   const handleSearchSubmit = () => {
@@ -59,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value)
-    setQuery(value) 
+    setQuery(value) // For dropdown results
   }
 
   useEffect(() => {
@@ -108,13 +116,29 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     setActiveNav("account")
   }
 
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu)
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (showMobileMenu && !target.closest(".mobile-menu") && !target.closest(".hamburger-btn")) {
+        setShowMobileMenu(false)
+      }
+    }
+
+    document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [showMobileMenu])
+
   return (
     <header className={`header ${scrolled ? "scrolled" : ""}`}>
       <div className="header-left">
         <div className="logo" onClick={handleLogoClick}>
           <h1 className="logo-text">MOVIE</h1>
         </div>
-        <nav className="nav">
+        <nav className="nav desktop-nav">
           <button
             onClick={() => handleNavLinkClick("topics")}
             className={`nav-link ${activeNav === "topics" ? "active-nav-link" : ""}`}
@@ -148,23 +172,18 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
           <div style={{ position: "relative" }}>
             <button
               onClick={() => {
-                setShowCountryModal(!showCountryModal);
-                setShowGenreModal(false);
-                setActiveNav("country");
+                setShowCountryModal(!showCountryModal)
+                setShowGenreModal(false)
+                setActiveNav("country")
               }}
               className={`nav-link ${activeNav === "country" ? "active-nav-link" : ""}`}
             >
               Country
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M7 10L12 15L17 10H7Z"
                   stroke="currentColor"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -201,7 +220,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
         </nav>
       </div>
       <div className="header-right">
-        <div className="search-container">
+        <div className="search-container mobile-search-container">
           <input
             type="text"
             placeholder="Search"
@@ -235,16 +254,23 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
                   {results.map((item) => (
                     <div key={item.id} className="search-item" onClick={() => handleResultClick(item)}>
                       <img
-                        src={getImageUrl(item.poster_path, "w185") || "/placeholder.svg"}
+                        src={
+                          getImageUrl(item.media_type === "person" ? item.profile_path : item.poster_path, "w185") ||
+                          "/placeholder.svg"
+                        }
                         alt={item.title || item.name}
                         className="search-item-poster"
                       />
                       <div className="search-item-info">
                         <h4>{item.title || item.name}</h4>
                         <p>
-                          {item.release_date || item.first_air_date} • ⭐ {item.vote_average?.toFixed(1)}
+                          {item.media_type === "person"
+                            ? `${item.known_for_department || "Actor"} • ★ ${item.popularity?.toFixed(1) || "N/A"}`
+                            : `${item.release_date || item.first_air_date} • ⭐ ${item.vote_average?.toFixed(1)}`}
                         </p>
-                        <span className="media-type">{item.media_type === "movie" ? "Movie" : "TV Show"}</span>
+                        <span className="media-type">
+                          {item.media_type === "movie" ? "Movie" : item.media_type === "tv" ? "TV Show" : "Actor"}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -253,25 +279,185 @@ const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
             </div>
           )}
         </div>
-        <button className="header-btn clock-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M12 7V12L15 13.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button className="header-btn language-btn">EN</button>
-        <button className="header-btn profile-btn" onClick={handleProfileClick}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+
+        <div className="desktop-buttons">
+          <button className="header-btn clock-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path
+                d="M12 7V12L15 13.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          {/* <button className="header-btn language-btn">EN</button> */}
+          <button className="header-btn profile-btn" onClick={handleProfileClick}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </button>
+        </div>
+
+        <button className="hamburger-btn" onClick={toggleMobileMenu}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3 6H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
+
+      {showMobileMenu && (
+        <div className="mobile-menu">
+          <div className="mobile-menu-content">
+            <nav className="mobile-nav">
+              <button
+                onClick={() => {
+                  handleNavLinkClick("topics")
+                  setShowMobileMenu(false)
+                }}
+                className={`mobile-nav-link ${activeNav === "topics" ? "active-nav-link" : ""}`}
+              >
+                Topic
+              </button>
+
+              <div className="mobile-dropdown">
+                <button
+                  onClick={() => {
+                    setShowGenreModal(!showGenreModal)
+                    setShowCountryModal(false)
+                    setActiveNav("genre")
+                  }}
+                  className={`mobile-nav-link ${activeNav === "genre" ? "active-nav-link" : ""}`}
+                >
+                  Genre
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M7 10L12 15L17 10H7Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {showGenreModal && (
+                  <GenreModal
+                    isOpen={showGenreModal}
+                    onClose={() => {
+                      setShowGenreModal(false)
+                      setShowMobileMenu(false)
+                    }}
+                    onGenreSelect={(genre) => {
+                      handleGenreSelect(genre)
+                      setShowMobileMenu(false)
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="mobile-dropdown">
+                <button
+                  onClick={() => {
+                    setShowCountryModal(!showCountryModal)
+                    setShowGenreModal(false)
+                    setActiveNav("country")
+                  }}
+                  className={`mobile-nav-link ${activeNav === "country" ? "active-nav-link" : ""}`}
+                >
+                  Country
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M7 10L12 15L17 10H7Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {showCountryModal && (
+                  <CountryModal
+                    isOpen={showCountryModal}
+                    onClose={() => {
+                      setShowCountryModal(false)
+                      setShowMobileMenu(false)
+                    }}
+                    onCountrySelect={(country) => {
+                      handleCountrySelect(country)
+                      setShowMobileMenu(false)
+                    }}
+                  />
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  handleNavLinkClick("movies")
+                  setShowMobileMenu(false)
+                }}
+                className={`mobile-nav-link ${activeNav === "movies" ? "active-nav-link" : ""}`}
+              >
+                Movies
+              </button>
+              <button
+                onClick={() => {
+                  handleNavLinkClick("series")
+                  setShowMobileMenu(false)
+                }}
+                className={`mobile-nav-link ${activeNav === "series" ? "active-nav-link" : ""}`}
+              >
+                Series
+              </button>
+              <button
+                onClick={() => {
+                  handleNavLinkClick("actor")
+                  setShowMobileMenu(false)
+                }}
+                className={`mobile-nav-link ${activeNav === "actor" ? "active-nav-link" : ""}`}
+              >
+                Actor
+              </button>
+            </nav>
+
+            <div className="mobile-buttons">
+              <button className="header-btn clock-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                  <path
+                    d="M12 7V12L15 13.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {/* <button className="header-btn language-btn">EN</button> */}
+              <button
+                className="header-btn profile-btn"
+                onClick={() => {
+                  handleProfileClick()
+                  setShowMobileMenu(false)
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
